@@ -1,57 +1,6 @@
 "# wolvez2021" 
 Mission code in Python for Keio Wolve'Z CaSat project 2021
 
-## About our CanSat
-### What is CanSat
-  CanSat is a small satellite sized approximately as small as soda can.
-  Our ultimate goal is to develop an autonomous tracking rover which is able to recognize a moving object such as humans or the other rover and chase it until it stops. This rover would be beneficial when it comes to space exploration, especially when building a base on the other planet, where there would be very few people. We can use it as carrier robot for example, when carring something from one point to another. We are hoping this rover would cooperate with humans and make human space activity more efficiant.
-
-### Our CanSat: Autonomous Tracking Robot by Image Processing
-  We are assuming a rover which has LRF and optimal camera. Autonomous tracking is accomplished by image processing and distance. Considerring the CanSat regulation, we are making a rover which has optical camera and ultrasonic sensor in order to realize autonomous tracking.
-
-<div align="center">
-<img src="https://user-images.githubusercontent.com/57528969/90110593-6fd8ee80-dd88-11ea-88c2-6b1f03e266d6.png" width="50%" title="Our CanSat">
-</div>
-
-## Table of Contents
-- [Wolve'Z CANSAT Project 2020](#wolvez-cansat-project-2020)
-  - [About our CanSat](#about-our-cansat)
-    - [What is CanSat](#what-is-cansat)
-    - [Our CanSat: Autonomous Tracking Robot by Image Processing](#our-cansat-autonomous-tracking-robot-by-image-processing)
-  - [Table of Contents](#table-of-contents)
-  - [Our Mission](#our-mission)
-    - [Human Following Robot](#human-following-robot)
-    - [Mission Sequence](#mission-sequence)
-    - [Image Processing](#image-processing)
-  - [Hardware Requirements](#hardware-requirements)
-  - [Software Requirements](#software-requirements)
-    - [Setups](#setups)
-  - [Usage](#usage)
-    - [Algorithm](#algorithm)
-  - [Project Member](#project-member)
-
-## Our Mission
-### Human Following Robot
-For the purpose of simplification of autonomous human tracking, we assume that the target human wears **red T-shirts** and we utilize red-object-traking technique. 
-### Mission Sequence
-Here is our Mission Sequence. After the landing, the rover starts searching for human by using ultrasonic sensor. Once it detects human, it activates the camera and start to follow the target human.
-
-<div align="center">
-<img src="https://user-images.githubusercontent.com/57528969/96898453-b0609100-14ca-11eb-8ec9-45d6982e07f1.png" width="80%" title="Mission Sequence">
-</div>
-
-**Re-Following**  
-Our CanSat have the abillity of re-following. In the case that it lost the target, it starts spinning, searching for the target using ultrasonic sensor. Once it detects the target again, it starts re-follow.
-
-<div align="center">
-<img src="https://user-images.githubusercontent.com/57528969/96900442-10583700-14cd-11eb-8eec-033e666a4063.png" width="80%" title="Refollow">
-</div>
-
-### Image Processing Algorithm
-<div align="center">
-<img src="https://user-images.githubusercontent.com/57528969/96898443-ae96cd80-14ca-11eb-9b5b-7c8019700ac0.png" width="80%" title="image processing">
-</div>
-
 ## Hardware Requirements
 - Microcomputer
   - Raspberry Pi 3B
@@ -95,9 +44,9 @@ git clone https://github.com/ujtk6014/WolveZ_CANSAT2020.git
 
 ## Project Member
 - Project manager   
-  Yuki Ko
+  Miyuki Nakamura 
 - Software (★: Part leader)  
-  ★Yuji Tanaka, Yuki Ko, Kazuki Oshima, Hikaru Kimura, Miyuki Nakamura
+  ★Hikaru Kimura, Takuma Okubo, Yuno Inoue, Toshiki Fukui,Mitsuhiro Takahashi
 - Hardware (★: Part leader)  
-  ★Mina Park, Shinichiro Kaji
+  ★Shinichiro Kaji, Sakumi Okamoto, Moeka Yoshinari, Fumiya Onishi
   
