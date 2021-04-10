@@ -12,7 +12,6 @@ Mission code in Python for Keio Wolve'Z CaSat project 2021
     |**Sensor**|**Products**|**image**|
     |:---|:---:|:---:|
     |Camera|[Raspberry Pi Camera Module V2](http://akizukidenshi.com/catalog/g/gM-10518/)|<img src="https://user-images.githubusercontent.com/57528969/91016338-95d37e00-e627-11ea-8958-fba777a15778.png" width="20%" title="Raspberry Pi Camera Module V2">|
-    |Ultrasonic sensor|[HC-SR04](http://akizukidenshi.com/catalog/g/gM-11009/)|<img src="https://user-images.githubusercontent.com/57528969/90114657-fcd27680-dd8d-11ea-9fe1-95e3e4e484da.png" width="20%" title="Ultrasonic Sensor">|
     |Communication Module|[ES920LR](https://easel5.com/products/es920lr/)|<img src="https://user-images.githubusercontent.com/57528969/90114355-92b9d180-dd8d-11ea-8565-76540eea0920.png" width="20%" title="Communication Module">|
     |GPS module|[GYSFDMAXB](http://akizukidenshi.com/catalog/g/gK-09991/)|<img src="https://user-images.githubusercontent.com/57528969/90114335-89c90000-dd8d-11ea-82d3-70ab748fa5f2.png" width="20%" title="GPS Module">|
     |Accelaration Sensor|[BNO055](https://www.switch-science.com/catalog/5511/)|<img src="https://user-images.githubusercontent.com/57528969/90114534-ce549b80-dd8d-11ea-81fd-3569fe0b1477.png" width="20%" title="Accelaration Sensor">|
