@@ -46,7 +46,7 @@ git clone https://github.com/ujtk6014/WolveZ_CANSAT2020.git
 - Project manager   
   Miyuki Nakamura 
 - Software (★: Part leader)  
-  ★Hikaru Kimura, Takuma Okubo, Yuno Inoue, Toshiki Fukui,Mitsuhiro Takahashi
+  ★Hikaru Kimura, Takuma Okubo, Yuno Inoue, Toshiki Fukui, Mitsuhiro Takahashi
 - Hardware (★: Part leader)  
   ★Shinichiro Kaji, Sakumi Okamoto, Moeka Yoshinari, Fumiya Onishi
   
