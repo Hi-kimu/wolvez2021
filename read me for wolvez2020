@@ -1,0 +1,10 @@
+去年のリポジトリを今年のリポジトリ内に作りたい！！！
+リポジトリ内に他のリポジトリを作るときはsubmodule化する必要がある。
+
+.gitmodules内にすでにパスが入っているので以下の作業をwolvez2021ディレクトリ内でする必要がある。
+
+termialにて…
+git submodule init
+git submodule update
+
+これでwolvez2020ディレクトリ内に去年のリポジトリがクローンされるはず。
