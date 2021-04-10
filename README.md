@@ -17,12 +17,12 @@ Mission code in Python for Keio Wolve'Z CaSat project 2021
     |GPS module|[GYSFDMAXB](http://akizukidenshi.com/catalog/g/gK-09991/)|<img src="https://user-images.githubusercontent.com/57528969/90114335-89c90000-dd8d-11ea-82d3-70ab748fa5f2.png" width="20%" title="GPS Module">|
     |Accelaration Sensor|[BNO055](https://www.switch-science.com/catalog/5511/)|<img src="https://user-images.githubusercontent.com/57528969/90114534-ce549b80-dd8d-11ea-81fd-3569fe0b1477.png" width="20%" title="Accelaration Sensor">|
     |Motor|comming soon...||
-    |Motor Driver|[TA7291P](https://toshiba.semicon-storage.com/jp/semiconductor/product/motor-driver-ics/brushed-dc-motor-driver-ics/detail.TA7291P.html)|<img src="https://user-images.githubusercontent.com/57528969/91016133-4725e400-e627-11ea-8397-be0234b8e773.png" width="20%" title="Motor Driver">|
+    |Motor Driver|[TA7291P](https://toshiba.semicon-storage.com/jp/semiconductor/product/motor-driver-ics/brushed-dc-motor-driver-ics/detail.TA7291P.html)|<img src= "https://user-images.githubusercontent.com/63459574/114264109-faf7aa80-9a23-11eb-8417-c08905610e5e.png" width="20%" title="Motor Driver">|
 
 ## Software Requirements
 Firstly, you need to clone this repository
 ```
-git clone https://github.com/ujtk6014/WolveZ_CANSAT2020.git
+git clone https://github.com/Hi-kimu/wolvez2021.git
 ```
 ### Setups
 **1. OpenCV**  
