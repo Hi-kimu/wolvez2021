@@ -5,8 +5,30 @@
 #bash setup_shutdown.sh
 #./setup_shutdown.sh
 #上記２つのどちらかのコマンドをターミナルに打ち込む
-#<<準備>>
-#/home/piにshutdown.pyをおいておく
+sudo cat > /home/pi/shutdown.py <<EOF
+import time
+import RPi.GPIO as GPIO
+import os
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(25,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+try:
+    while True:
+        GPIO.wait_for_edge(25, GPIO.FALLING)
+        sw_counter = 0
+
+        while True:
+            sw_status = GPIO.input(25)
+
+            if sw_status == 0:
+                sw_counter = sw_counter + 1
+                if sw_counter >= 200: #2秒以上押し続けるとshutdownコマンド実行
+                    os.system("sudo shutdown -h now")
+                    break
+            else:
+                break
+EOF
 
 #serviceファイルの作成
 #以下の項目追加
