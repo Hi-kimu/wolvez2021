@@ -10,7 +10,7 @@ try:
     print("motor run") 
     Motor1.go(90)
     #Motor2.go(100)
-    time.sleep(3)
+    time.sleep(1)
 
     #Motor.back(100)
     #time.sleep(3)

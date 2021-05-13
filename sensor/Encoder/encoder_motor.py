@@ -3,6 +3,7 @@
 import RPi.GPIO as GPIO
 import sys
 import time
+import math
 
 class motor():
     def __init__(self,pin_a,pin_b,pin1,pin2,vref): #各ピンのセットアップ
@@ -23,8 +24,9 @@ class motor():
         self.pwm = GPIO.PWM(vref,50) #電圧を参照するピンを周波数50HZに指定（Arduinoはデフォルトで490だけど、ラズパイはネットだと50HZがメジャーそうだった）
         
         self.angle=0.
+        self.prev_angle=0.
         self.prev_data=0
-        self.delta=360./(4*3*298)
+        self.delta=360./15
         
         GPIO.add_event_detect(self.pin_a,GPIO.BOTH)
         GPIO.add_event_detect(self.pin_b,GPIO.BOTH)
@@ -90,6 +92,8 @@ class motor():
         self.encoded=(self.current_a<<1)|self.current_b
         sum=(self.prev_data<<2)|self.encoded
         
+        #print("aaaaaa",self.current_a)
+        #print("bbbbbb",self.current_b)
         print(bin(sum))
         
         if(sum==0b0010 or sum==0b1011 or sum==0b1101 or sum==0b0100):
@@ -99,6 +103,13 @@ class motor():
             self.angle-=self.delta
             print("minus",gpio_pin,self.angle)
         
+        self.w_r=(self.angle-self.prev_angle)/0.1
+        print("-----w_speed------",self.w_r) 
+        
+        #self.w_r=(self.encoded-self.prev_data)*2*math.pi/(1*74.83*0.1)
+        #print("-----w_speed------",self.w_r)
+        
         self.prev_data=self.encoded
+        self.prev_angle = self.angle
             
 
