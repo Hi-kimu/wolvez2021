@@ -9,19 +9,20 @@ Motor1 = encoder_motor.motor(19,26,6,5,13)
 try:
     print("motor run") 
     Motor1.go(90)
-    print("-------------speed90----------------")
-    for i in range(1,61):
+    #print("-------------speed60----------------")
+    while True:
         Motor1.callback(19)
         Motor1.callback(26)
-        time.sleep(0.1)
+        #time.sleep(0.1)
     
-    
+    """
     Motor1.go(30)
-    print("-------------speed90----------------")
+    print("-------------speed30----------------")
     for i in range(1,91):
         Motor1.callback(19)
         Motor1.callback(26)
         time.sleep(0.1)
+    """
     
     #Motor2.go(100)
 

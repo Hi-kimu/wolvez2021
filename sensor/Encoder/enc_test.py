@@ -16,6 +16,8 @@ angle=0.
 prev_angle=0.
 delta=360/15
 
+enc_time=[]
+
  
  
 def main():
@@ -61,7 +63,7 @@ def motor_cntl():
         GPIO.output(pin_m2, GPIO.HIGH)   
     
 def callback(gpio_pin):
-    global angle, prev_data, prev_angle
+    global angle, prev_data, prev_angle, enc_time
  
     current_a=GPIO.input(pin_a)
     current_b=GPIO.input(pin_b)
@@ -70,6 +72,13 @@ def callback(gpio_pin):
     #print("EEEEEEEE",bin(encoded))
     sum=(prev_data<<2)|encoded
     
+    if sum==0b0010:
+        enc_time.append(time.time())
+        
+    if len(enc_time)==6:
+        print(enc_time)
+        enc_time=[]
+    """
     print(bin(sum))
     if (sum==0b0010 or sum==0b1011 or sum==0b1101 or sum==0b0100):
         angle+=delta
@@ -77,10 +86,10 @@ def callback(gpio_pin):
     elif(sum==0b0001 or sum==0b0111 or sum==0b1110 or sum==0b1000):
         angle-=delta
         print ("minus", gpio_pin, angle)
+    """
     
-    
-    w_r=(angle-prev_angle)/0.1
-    print("-----w_speed------",w_r)
+    #w_r=(angle-prev_angle)/0.1
+    #print("-----w_speed------",w_r)
     
     prev_data=encoded
     prev_angle = angle
