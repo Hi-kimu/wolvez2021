@@ -9,15 +9,6 @@ class servomotor():
         self.pwm = GPIO.PWM(self.pin,50) #電圧を参照するピンを周波数50HZに指定
         self.pwm.start(0.0)
         
-    def right(self):#正転90度
-        self.pwm.ChangeDutyCycle(2.5)
-        
-    def mid(self):#もとの場所
-        self.pwm.ChangeDutyCycle(7.5)
-        
-    def left(self):#逆転90度
-        self.pwm.ChangeDutyCycle(12.5)
-        
     def servo_angle(self,angle):
         duty = 2.5 + (12.0 - 2.5) * (angle + 90) / 180   #角度からデューティ比を求める
         self.pwm.ChangeDutyCycle(duty)     #デューティ比を変更
