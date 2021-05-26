@@ -4,15 +4,19 @@ import time
 
 GPIO.setwarnings(False)
 Motor1 = encoder_motor.motor(19,26,6,5,13)
+Motor2 = encoder_motor.motor(20,21,27,22,17)
 #Motor2 = motor.motor(20,21,12)
 
 try:
     print("motor run") 
     Motor1.go(90)
+    Motor2.go(90)
     #print("-------------speed60----------------")
     while True:
         Motor1.callback(19)
         Motor1.callback(26)
+        Speed21=Motor2.callback(20)
+        Speed22=Motor2.callback(21)
         #time.sleep(0.1)
     
     """

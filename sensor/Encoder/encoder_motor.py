@@ -110,11 +110,13 @@ class motor():
             self.mot_speed=1/(898*self.enc_ave_time)
                 
             #print(self.enc_time)
-            print(self.enc_del_time)
-            print(self.enc_ave_time)
+            #print(self.enc_del_time)
+            #print(self.enc_ave_time)
             print("motor-revolution/sec",self.mot_speed)
             self.enc_time=[]
             self.enc_del_time=[]
+            
+            
         
         #print("aaaaaa",self.current_a)
         #print("bbbbbb",self.current_b)
