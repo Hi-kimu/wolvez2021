@@ -1,10 +1,10 @@
-import encoder_motor
+import encoder_motor2
 import RPi.GPIO as GPIO
 import time 
 
 GPIO.setwarnings(False)
-Motor1 = encoder_motor.motor(19,26,6,5,13)
-Motor2 = encoder_motor.motor(20,21,27,22,17)
+Motor1 = encoder_motor2.motor(19,26,6,5,13)
+Motor2 = encoder_motor2.motor(20,21,27,22,17)
 #Motor2 = motor.motor(20,21,12)
 
 try:
@@ -13,10 +13,13 @@ try:
     Motor2.go(90)
     #print("-------------speed60----------------")
     while True:
-        Motor1.callback(19)
-        Motor1.callback(26)
-        Motor2.callback(20)
-        Motor2.callback(21)
+        Speed1=Motor1.callback(19)
+        #Motor1.callback(26)
+        #print(Speed1)
+        #print("Speed2")
+        Speed2=Motor2.callback(20)
+        #Motor2.callback(21)
+        #print(Speed2)
         #time.sleep(0.1)
     
     """
@@ -40,9 +43,10 @@ try:
     time.sleep(1)
 except KeyboardInterrupt:
     Motor1.stop()
-    #Motor2.stop()
+    Motor2.stop()
     GPIO.cleanup()
 
 GPIO.cleanup()
+
 
 
