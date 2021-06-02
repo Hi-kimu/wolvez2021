@@ -6,8 +6,10 @@ import RPi.GPIO as GPIO
 import sys
 import constant as ct
 
+
 can=cansat.Cansat()
 can.setup()
+
 
 try:
     while True:

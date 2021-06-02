@@ -13,6 +13,7 @@ import RPi.GPIO as GPIO
 import sys
 import numpy as np
 import datetime
+import os
 
 #クラス読み込み
 import constant as ct
@@ -73,6 +74,11 @@ class Cansat(object):
         
         date = datetime.datetime.now()
         self.filename = '{0:%Y%m%d}'.format(date)
+        self.filename_hm = '{0:%Y%m%d%H%M}'.format(date)
+        
+        if not os.path.isdir('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/' % (self.filename)):
+            os.mkdir('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/' % (self.filename))
+  
     
     def setup(self):
         #self.gps.setupGps()
@@ -100,6 +106,9 @@ class Cansat(object):
         self.Ax=round(self.bno055.Ax,3)
         self.Ay=round(self.bno055.Ay,3)
         self.Az=round(self.bno055.Az,3)
+        self.gx=round(self.bno055.gx,3)
+        self.gy=round(self.bno055.gy,3)
+        self.gz=round(self.bno055.gz,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
         datalog = str(self.timer) + ","\
@@ -110,6 +119,9 @@ class Cansat(object):
                   + str(self.Ax).rjust(6) + ","\
                   + str(self.Ay).rjust(6) + ","\
                   + str(self.Az).rjust(6) + ","\
+                  + str(self.gx).rjust(6) + ","\
+                  + str(self.gy).rjust(6) + ","\
+                  + str(self.gz).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6)
         '''
@@ -117,10 +129,10 @@ class Cansat(object):
                   + str(self.state)
         print(datalog)
         
-        '''
-        with open('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/%s.txt' % (self.filename,self.filename),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+        
+        with open('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
-            '''
+            
     
     
     def sendRadio(self):
