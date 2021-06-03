@@ -18,7 +18,7 @@ class Cansat():
         #self.microgps = MicropyGPS(9,'dd')# MicroGPSオブジェクトを生成する。
         self.bno055 = BNO055()
         self.rightMotor = motor(19,26,5,6,13)
-        self.leftMotor = motor(8,7,16,20,21)
+        self.leftMotor = motor(8,7,16,20,12)
         self.servomotor = servomotor(18)
         self.bno055.setupBno()
         self.LoRa = LoRa.LoRa()
