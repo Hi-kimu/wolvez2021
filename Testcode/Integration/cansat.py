@@ -30,7 +30,7 @@ class Cansat(object):
         #オブジェクトの生成
         self.rightmotor = encoder_motor2.motor(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,
                                                ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
-        self.leftmotor = encoder_motor2.motor(ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.const.LEFT_MOTOR_ENCODER_B_PIN,
+        self.leftmotor = encoder_motor2.motor(ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN,
                                               ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
         self.servomotor = servomotor.servomotor(ct.const.SERVOMOTOR_PIN)
         self.gps = gps.GPS()
@@ -85,15 +85,15 @@ class Cansat(object):
   
     
     def setup(self):
-        #self.gps.setupGps()
-        #self.radio.setupRadio()
-        '''
+        self.gps.setupGps()
+        self.radio.setupRadio()
+        
         self.bno055.setupBno()
 
         if self.bno055.begin() is not True:
             print("Error initializing device")
             exit()
-   '''
+   
     def sensor(self):
         self.timer = 1000*(time.time() - self.startTime) #経過時間 (ms)
         self.timer = int(self.timer)
@@ -105,8 +105,8 @@ class Cansat(object):
             self.sendRadio()#LoRaでログを送信
             
     def integ(self):
-        self.rightMotor.go()
-        self.leftMotor.go()
+        self.rightmotor.go(100)
+        self.leftmotor.go(100)
               
         
     
