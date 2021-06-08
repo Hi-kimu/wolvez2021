@@ -29,4 +29,4 @@ class LoraSendClass:
             except KeyboardInterrupt:
                 self.sendDevice.close()
             # 5秒待機
-            time.sleep(5)
+            time.sleep(0.5)
