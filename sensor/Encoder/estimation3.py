@@ -54,6 +54,8 @@ class estimation():
         
     
     def callback(self, gpio_pin1, gpio_pin2):
+        self.mot_speed=0
+        self.mot_speed2=0
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -110,6 +112,8 @@ class estimation():
         return self.mot_speed, self.mot_speed2
     
     def est_v_w(self, gpio_pin1, gpio_pin2):
+        self.mot_speed=0
+        self.mot_speed2=0
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -167,6 +171,13 @@ class estimation():
         self.cansat_rad_speed = (0.058/0.183)*self.mot_speed - (0.058/0.183)*self.mot_speed2
         
         return self.cansat_speed, self.cansat_rad_speed
+    
+    def odometri(self,v,w,t,x,y,q):
+        x_new=x+v*t*math.cos(q)
+        y_new=y+v*t*math.sin(q)
+        q_new=q+w*t
+        
+        return x_new,y_new,q_new
         
             
 
