@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import lora_setting
+import time
 
 
 # LoRa送受信用クラス（受信したらRSSIを送り返す）
@@ -26,25 +27,26 @@ class LoraSwitClass:
                     try:
                         line = self.switDevice.device.readline()
                         line = line.decode("utf-8")
+                    
+                        print(line)
+                        if line.find('RSSI') >= 0 and line.find('information') == -1:
+                            log = line
+                            log_list = log.split('):Receive Data(')
+                            # 受信電波強度
+                            rssi = log_list[0][5:]
+                            print(rssi)
+                            # 受信フレーム
+                            data = log_list[1][:-3]
+                            print(data)
+                            time.sleep(1)
+                            #senddata
+                            senddata = rssi #ここの型をstringにする必要あるかも                    
+                            print('<-- SEND -- [ {} ]'.format(senddata))
+                            self.switDevice.cmd_lora('{}'.format(senddata))
+                            print('------------')
                     except Exception as e:
                         print(e)
-                        continue
-                    print(line)
-                    if line.find('RSSI') >= 0 and line.find('information') == -1:
-                        log = line
-                        log_list = log.split('):Receive Data(')
-                        # 受信電波強度
-                        rssi = log_list[0][5:]
-                        print(rssi)
-                        # 受信フレーム
-                        data = log_list[1][:-3]
-                        print(data)
-                        #senddata
-                        senddata = rssi #ここの型をstringにする必要あるかも
-                        #print('<-- SEND -- [00010002 {} ]'.format(senddata))
-                        print('<-- SEND -- [ {} ]'.format(senddata))
-                        #self.switDevice.cmd_lora('00010002{}'.format(senddata))
-                        self.switDevice.cmd_lora('{}'.format(senddata))
+                        continue   
             except KeyboardInterrupt:
-                self.recvDevice.close()
+                self.switDevice.close()
                 

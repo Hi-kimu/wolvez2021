@@ -8,7 +8,7 @@ import lora_swit
 
 def main(argc, argv):
     #lora_device = "/dev/ttyS0"  # ES920LRデバイス名
-    lora_device = "/dev/ttyAMA1"  # ES920LRデバイス名
+    lora_device = "/dev/ttyAMA1" # ES920LRデバイス名
     if argc < 2:
         print('Usage: python %s [send | recv | swit]' % (argv[0]))
         print('       [send | recv | switch] ... mode select')
