@@ -3,7 +3,7 @@
 Keio Wolve'Z cansat2021
 mission function
 Author Hikaru Kimura
-last update:2021/5/31
+last update:2021/6/30
 
 """
 
@@ -193,7 +193,7 @@ class Cansat(object):
             self.rightmotor.stop()
             self.leftmotor.stop()
         
-        '''
+        
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
             if self.countFlyLoop > ct.const.COUNT_FLIGHTPIN_THRE:#一定時間HIGHだったらステート移行
@@ -202,11 +202,7 @@ class Cansat(object):
                 
         else:
             self.countFlyLoop = 0 #何故かLOWだったときカウントをリセット
-    '''
-        if not self.flyingTime == 0:#センサ統合試験用
-            if time.time() - self.flyingTime > ct.const.PREPARING_TIME_THRE:
-                self.state = 2
-                self.laststate = 2
+    
             
     def dropping(self):
         if self.droppingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
