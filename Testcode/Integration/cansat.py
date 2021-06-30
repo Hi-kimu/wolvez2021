@@ -48,7 +48,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 0
+        self.state = 5 #この変数でステートを管理している．センサ統合試験をするときは5にするといい．
         self.laststate = 0
         self.landstate = 0
      
@@ -280,7 +280,6 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         
-        #以下に画像処理走行プログラム
         
     def goal(self):
         if self.goalTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
