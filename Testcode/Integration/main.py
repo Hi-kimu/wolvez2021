@@ -20,5 +20,6 @@ try:
 
 except KeyboardInterrupt:
     print('finished')
+    can.keyboardinterrupt()
     GPIO.cleanup()
     pass
