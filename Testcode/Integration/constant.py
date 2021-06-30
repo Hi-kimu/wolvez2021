@@ -1,3 +1,6 @@
+#Last Update 2021/06/30
+#Hikaru Kimura
+
 import const
 
 #ピン番号の指定
@@ -12,9 +15,9 @@ const.RIGHT_MOTOR_VREF_PIN = 12
 const.RIGHT_MOTOR_IN1_PIN = 16
 const.RIGHT_MOTOR_IN2_PIN = 20
 const.SERVOMOTOR_PIN = 25
-const.RED_LED_PIN = 7
-const.BLUE_LED_PIN = 24
-const.GREEN_LED_PIN = 8
+const.RED_LED_PIN = 9
+const.BLUE_LED_PIN = 10
+const.GREEN_LED_PIN = 11
 const.RELEASING_PIN = 26
 const.FLIGHTPIN_PIN = 4
 
