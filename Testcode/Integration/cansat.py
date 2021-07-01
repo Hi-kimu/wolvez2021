@@ -3,7 +3,7 @@
 Keio Wolve'Z cansat2021
 mission function
 Author Hikaru Kimura
-last update:2021/5/31
+last update:2021/6/30
 
 """
 
@@ -18,17 +18,21 @@ import os
 #クラス読み込み
 import constant as ct
 import gps
-import motor
+import encoder_motor2
 import radio
 import bno055
 import led
+import servomotor
 
 class Cansat(object):
     
     def __init__(self):
         #オブジェクトの生成
-        self.rightmotor = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
-        self.leftmotor = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
+        self.rightmotor = encoder_motor2.motor(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,
+                                               ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
+        self.leftmotor = encoder_motor2.motor(ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN,
+                                              ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
+        self.servomotor = servomotor.servomotor(ct.const.SERVOMOTOR_PIN)
         self.gps = gps.GPS()
         self.bno055 = bno055.BNO055()
         self.radio = radio.radio()
@@ -44,7 +48,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 0
+        self.state = 5 #この変数でステートを管理している．センサ統合試験をするときは5にするといい．
         self.laststate = 0
         self.landstate = 0
      
@@ -63,9 +67,6 @@ class Cansat(object):
         self.countFlyLoop = 0
         self.countDropLoop = 0
         self.countGoal = 0
-        self.countAreaLoopEnd=0 # 終了判定用
-        self.countAreaLoopStart=0 # 開始判定用
-        self.countAreaLoopLose=0 # 見失い判定用
         self.countgrass=0
         
         #GPIO設定
@@ -81,28 +82,39 @@ class Cansat(object):
   
     
     def setup(self):
-        #self.gps.setupGps()
-        #self.radio.setupRadio()
-        '''
+        self.gps.setupGps()
+        self.radio.setupRadio()
         self.bno055.setupBno()
 
         if self.bno055.begin() is not True:
             print("Error initializing device")
             exit()
-   '''
+   
     def sensor(self):
         self.timer = 1000*(time.time() - self.startTime) #経過時間 (ms)
         self.timer = int(self.timer)
-        #self.gps.gpsread()
-        #self.bno055.bnoread()
+        self.gps.gpsread()
+        self.bno055.bnoread()
         self.writeData()#txtファイルへのログの保存
         '''
+        ここにエンコーダ入れるといいかなと
+        '''
+        
         if not self.state == 1: #preparingのときは電波を発しない
             self.sendRadio()#LoRaでログを送信
-            '''
-    
+            
+    def integ(self):#センサ統合用
+        self.rightmotor.go(100)
+        self.leftmotor.go(100)
+              
+    def keyboardinterrupt(self):
+        self.RED_LED.led_on()
+        self.BLUE_LED.led_off()
+        self.GREEN_LED.led_off()
+        self.rightmotor.stop()
+        self.leftmotor.stop()
+
     def writeData(self):
-        '''
         self.Ax=round(self.bno055.Ax,3)
         self.Ay=round(self.bno055.Ay,3)
         self.Az=round(self.bno055.Az,3)
@@ -125,6 +137,9 @@ class Cansat(object):
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6)
         '''
+        ここにエンコーダの値も出力させるとよいと思う
+        '''
+        
         datalog=str(self.timer) + ","\
                   + str(self.state)
         print(datalog)
@@ -185,7 +200,7 @@ class Cansat(object):
             self.rightmotor.stop()
             self.leftmotor.stop()
         
-        '''
+        
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
             if self.countFlyLoop > ct.const.COUNT_FLIGHTPIN_THRE:#一定時間HIGHだったらステート移行
@@ -194,11 +209,7 @@ class Cansat(object):
                 
         else:
             self.countFlyLoop = 0 #何故かLOWだったときカウントをリセット
-    '''
-        if not self.flyingTime == 0:#センサ統合試験用
-            if time.time() - self.flyingTime > ct.const.PREPARING_TIME_THRE:
-                self.state = 2
-                self.laststate = 2
+    
             
     def dropping(self):
         if self.droppingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -207,11 +218,7 @@ class Cansat(object):
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_on()         
             
-        if not self.droppingTime == 0:#センサ統合試験用
-            if time.time() - self.droppingTime > ct.const.PREPARING_TIME_THRE:
-                self.state = 6
-                self.laststate = 6
-            '''
+            
         #加速度が小さくなったら着地判定
         if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.ACC_THRE,2):#加速度が閾値以下で着地判定
             self.countDropLoop+=1
@@ -220,7 +227,8 @@ class Cansat(object):
                 self.laststate = 3
         else:
             self.countDropLoop = 0 #初期化の必要あり
-            '''
+            
+            
         """
         #（予備）時間で着地判定
         if not self.droppingTime == 0:
@@ -238,12 +246,12 @@ class Cansat(object):
         
         if not self.landingTime == 0:
             if self.landstate == 0:
-                #GPIO.output(ct.const.RELEASING_PIN,1) #電圧をHIGHにして焼き切りを行う
+                self.servomotor.servo_angle(90)#サーボモータ動かしてパラ分離
                 if time.time()-self.landingTime > ct.const.RELEASING_TIME_THRE:
-                    #GPIO.output(ct.const.RELEASING_PIN,0) #焼き切りが危ないのでlowにしておく
+                    #self.servomotor.servo_angle(0)
                     self.pre_motorTime = time.time()
                     self.landstate = 1
-            #焼き切りが終わったあと一定時間モータを回して分離シートから脱出
+            #一定時間モータを回してパラシュートから離れる
             elif self.landstate == 1:
                 self.rightmotor.go(100)
                 self.leftmotor.go(100)
@@ -258,7 +266,6 @@ class Cansat(object):
     
     def waiting(self):
         if self.waitingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            GPIO.output(ct.const.RELEASING_PIN,0) #焼き切りしっぱなしでは怖いので保険
             self.waitingTime = time.time()
             self.RED_LED.led_off()
             self.BLUE_LED.led_on()
@@ -273,7 +280,6 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         
-        #以下に画像処理走行プログラム
         
     def goal(self):
         if self.goalTime == 0:#時刻を取得してLEDをステートに合わせて光らせる

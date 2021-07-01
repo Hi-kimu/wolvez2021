@@ -1,6 +1,7 @@
 import encoder_motor
 import RPi.GPIO as GPIO
 import time 
+import constant as ct
 
 GPIO.setwarnings(False)
 Motor1 = encoder_motor.motor(19,26,6,5,13)

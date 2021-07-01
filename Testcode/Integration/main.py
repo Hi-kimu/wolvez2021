@@ -14,10 +14,12 @@ can.setup()
 try:
     while True:
         can.sensor()
+        can.integ()
         time.sleep(0.05)
         can.sequence()
 
 except KeyboardInterrupt:
     print('finished')
+    can.keyboardinterrupt()
     GPIO.cleanup()
     pass
