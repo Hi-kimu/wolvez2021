@@ -23,20 +23,12 @@ class LoraSendClass:
         while True:
             try:
                 # 送るデータ
-                data = 'aaaa'
-                print('<-- SEND -- [00010002 {} ]'.format(data))
-                self.sendDevice.cmd_lora('00010002{}'.format(data))
+                for i in range(50):   
+                    data = str(i)
+                    print('<-- SEND -- [00010002 {} ]'.format(data))
+                    self.sendDevice.cmd_lora('00010002{}'.format(data))
+                    time.sleep(0.5)
             except KeyboardInterrupt:
                 self.sendDevice.close()
-                
-            print(line)
-            if line.find('RSSI') >= 0 and line.find('information') == -1:
-                log = line
-                log_list = log.split('):Receive Data(')
-                # 受信電波強度
-                rssi = log_list[0][5:]
-                print(rssi)
-                     
-            # 0.5秒待機
-            time.sleep(0.5)
-
+            # 5秒待機
+            time.sleep(500)
