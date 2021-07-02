@@ -50,4 +50,3 @@ class LoraSwitClass:
             except KeyboardInterrupt:
                 self.switDevice.close()
                 
-
