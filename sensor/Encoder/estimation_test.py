@@ -8,7 +8,7 @@ GPIO.setwarnings(False)
 MotorR = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
 MotorL = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
 Encoder = estimation4.estimation(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN)
-#Motor2 = motor.motor(20,21,12)
+
 x=0
 y=0
 q=0
@@ -23,13 +23,8 @@ try:
     print("motor run") 
     MotorR.go(90)
     MotorL.go(60)
-    #print("-------------speed60----------------")
+    
     while True:
-        """
-        v1,v2=Encoder.callback(19,20) #motor's speed [revolution/sec]
-        print(v1)
-        print(v2)
-        """
         t1=time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(19,20)
         #time.sleep(del_t)
@@ -48,7 +43,6 @@ except KeyboardInterrupt:
     print(end_time-start_time,"[s]")
     MotorR.stop()
     MotorL.stop()
-    #Motor2.stop()
     GPIO.cleanup()
 
 GPIO.cleanup()
