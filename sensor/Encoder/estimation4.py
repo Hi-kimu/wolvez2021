@@ -1,5 +1,3 @@
-#実際にモーター買って試してみないとわからないかも、コードはこれでいけると思うんだけど...
-
 import RPi.GPIO as GPIO
 import sys
 import time
