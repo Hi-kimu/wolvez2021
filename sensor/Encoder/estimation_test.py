@@ -26,7 +26,7 @@ try:
     
     while True:
         t1=time.time()
-        cansat_speed,cansat_rad_speed=Encoder.est_v_w(19,20)
+        cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
         #time.sleep(del_t)
         t2=time.time()
         x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
