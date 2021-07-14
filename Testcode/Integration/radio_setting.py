@@ -76,4 +76,4 @@ class LoraSettingClass:
     def close(self):
         self.device.close()
 
-os.system("sudo insmod soft_uart.ko")#os
+#os.system("sudo insmod soft_uart.ko")#os

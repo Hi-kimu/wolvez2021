@@ -8,7 +8,9 @@ class radio(object):
     
     def __init__(self):
         # ES920LRデバイス名
-        self.lora_device = "/dev/ttySOFT0"
+        # ラズパイ3で使うときはttySOFT0
+        # ラズパイ4で使うときはttyAMA1
+        self.lora_device = "/dev/ttyAMA1"
         """
         #config設定
         self.channel = 15   #d

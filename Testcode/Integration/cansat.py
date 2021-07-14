@@ -18,7 +18,8 @@ import os
 #クラス読み込み
 import constant as ct
 import gps
-import encoder_motor2
+import motor
+import estimation
 import radio
 import bno055
 import led
@@ -28,10 +29,10 @@ class Cansat(object):
     
     def __init__(self):
         #オブジェクトの生成
-        self.rightmotor = encoder_motor2.motor(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,
-                                               ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
-        self.leftmotor = encoder_motor2.motor(ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN,
-                                              ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
+        self.rightmotor = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
+        self.leftmotor = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
+        self.encoder = estimation.estimation(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN)
+
         self.servomotor = servomotor.servomotor(ct.const.SERVOMOTOR_PIN)
         self.gps = gps.GPS()
         self.bno055 = bno055.BNO055()
@@ -48,9 +49,16 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 5 #この変数でステートを管理している．センサ統合試験をするときは5にするといい．
+        self.state = 0#この変数でステートを管理している．センサ統合試験をするときは5にするといい．
         self.laststate = 0
         self.landstate = 0
+        
+        #オドメトリ用の変数
+        self.x=0
+        self.y=0
+        self.q=0
+        self.t1=0
+        self.t2=0
      
         #stateに入っている時刻の初期化
         self.preparingTime = 0
@@ -77,8 +85,8 @@ class Cansat(object):
         self.filename = '{0:%Y%m%d}'.format(date)
         self.filename_hm = '{0:%Y%m%d%H%M}'.format(date)
         
-        if not os.path.isdir('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/' % (self.filename)):
-            os.mkdir('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/' % (self.filename))
+        if not os.path.isdir('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s' % (self.filename)):
+            os.mkdir('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s' % (self.filename))
   
     
     def setup(self):
@@ -95,10 +103,12 @@ class Cansat(object):
         self.timer = int(self.timer)
         self.gps.gpsread()
         self.bno055.bnoread()
+#         self.t1=time.time()
+#         self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
+#         self.t2=time.time()
+#         self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
         self.writeData()#txtファイルへのログの保存
-        '''
-        ここにエンコーダ入れるといいかなと
-        '''
+        
         
         if not self.state == 1: #preparingのときは電波を発しない
             self.sendRadio()#LoRaでログを送信
@@ -131,21 +141,21 @@ class Cansat(object):
                   + str(self.Ax).rjust(6) + ","\
                   + str(self.Ay).rjust(6) + ","\
                   + str(self.Az).rjust(6) + ","\
-                  + str(self.gx).rjust(6) + ","\
-                  + str(self.gy).rjust(6) + ","\
-                  + str(self.gz).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6)
-        '''
-        ここにエンコーダの値も出力させるとよいと思う
-        '''
-        
-        datalog=str(self.timer) + ","\
-                  + str(self.state)
+#                   + str(self.encoder.cansat_speed).rjust(6) + ","\
+#                   + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
+#                   + str(self.x).rjust(6) + ","\
+#                   + str(self.y).rjust(6) + ","\
+#                   + str(self.q).rjust(6)
+#                   + str(self.gx).rjust(6) + ","\
+#                   + str(self.gy).rjust(6) + ","\
+#                   + str(self.gz).rjust(6) + ","\
+                  
         print(datalog)
         
         
-        with open('/home/pi/Desktop/wolvez2021/Testcode/EtoEtest/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+        with open('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
             
     

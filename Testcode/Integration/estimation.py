@@ -1,3 +1,5 @@
+#実際にモーター買って試してみないとわからないかも、コードはこれでいけると思うんだけど...
+
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -112,6 +114,7 @@ class estimation():
     def est_v_w(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
+        self.iteration=500
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -123,7 +126,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time.append(time.time())
             
-            if len(self.enc_time)==1000:
+            if len(self.enc_time)==self.iteration:
                 for i in range(0,len(self.enc_time)-1):
                     self.enc_del_time.append(0)
                 for i in range(0,len(self.enc_time)-1):
@@ -149,7 +152,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time2.append(time.time())
             
-            if len(self.enc_time2)==1000:
+            if len(self.enc_time2)==self.iteration:
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2.append(0)
                 for i in range(0,len(self.enc_time2)-1):
@@ -171,9 +174,9 @@ class estimation():
         return self.cansat_speed, self.cansat_rad_speed
     
     def odometri(self,v,w,t,x,y,q):
-        x_new=x+v*t*math.cos(q)
-        y_new=y+v*t*math.sin(q)
-        q_new=q+w*t
+        self.x_new=x+v*t*math.cos(q)
+        self.y_new=y+v*t*math.sin(q)
+        self.q_new=q+w*t
         
-        return x_new,y_new,q_new
+        return self.x_new,self.y_new,self.q_new
     
