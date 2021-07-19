@@ -14,7 +14,7 @@ class LoraSettingClass:
             error_mes = '{0}'.format(e)
             print(error_mes)
         self.cmd = None
-        self.reset_pin = 11
+        self.reset_pin = 18
         self.set_mode = None
 
     # LoRaに対して命令コマンドを入力する
