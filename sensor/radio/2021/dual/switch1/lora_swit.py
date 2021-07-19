@@ -24,13 +24,13 @@ class LoraSwitClass:
             try:
                 # 送るデータ
                 senddata = 'aaaa'
+                
+                self.switDevice.cmd_lora('{}'.format(senddata))
                 print('<-- SEND -- [{} ]'.format(senddata))
-                self.switDevice.cmd_lora('{}'.format(senddata))  
                # time.sleep(0.5)                  
                 
                 # ES920LRモジュールから値を取得              
                 while True:
-                
                     if self.switDevice.device.inWaiting() > 0:
                     
                         line = self.switDevice.device.readline()
@@ -59,3 +59,5 @@ class LoraSwitClass:
                 
             #5
             time.sleep(1)
+
+

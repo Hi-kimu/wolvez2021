@@ -49,7 +49,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 0#この変数でステートを管理している．センサ統合試験をするときは5にするといい．
+        self.state = 5#この変数でステートを管理している．センサ統合試験をするときは5にするといい．
         self.laststate = 0
         self.landstate = 0
         
@@ -60,20 +60,33 @@ class Cansat(object):
         self.t1=0
         self.t2=0
      
+        #n点測位用の変数
+        self.meanCansatRSSI=0
+        self.meanLostRSSI=0
+        self.LogCansatRSSI=list()
+        self.LogLostRSSI=list()
+        self.n_dis_LogCansatRSSI=list()
+        self.n_dis_LogLostRSSI=list()
+        self.n_meandisLog=list()
+        self.n_LogCansatRSSI=list()
+        self.n_LogLostRSSI=list()
+     
         #stateに入っている時刻の初期化
         self.preparingTime = 0
         self.flyingTime = 0
         self.droppingTime = 0
         self.landingTime = 0
         self.pre_motorTime = 0
-        self.waitingTime = 0
+        self.startingTime = 0
+        self.measureringTime = 0
         self.runningTime = 0
-        self.goalTime = 0
+        self.positioningTime = 0
         
         #state管理用変数初期化
         self.countPreLoop = 0
         self.countFlyLoop = 0
         self.countDropLoop = 0
+        self.countSwitchLoop=0
         self.countGoal = 0
         self.countgrass=0
         
@@ -85,8 +98,8 @@ class Cansat(object):
         self.filename = '{0:%Y%m%d}'.format(date)
         self.filename_hm = '{0:%Y%m%d%H%M}'.format(date)
         
-        if not os.path.isdir('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s' % (self.filename)):
-            os.mkdir('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s' % (self.filename))
+        if not os.path.isdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename)):
+            os.mkdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
   
     
     def setup(self):
@@ -111,8 +124,9 @@ class Cansat(object):
         
         
         if not self.state == 1: #preparingのときは電波を発しない
-            self.sendRadio()#LoRaでログを送信
-            
+            #self.sendRadio()#LoRaでログを送信
+            self.switchRadio()
+
     def integ(self):#センサ統合用
         self.rightmotor.go(100)
         self.leftmotor.go(100)
@@ -133,6 +147,7 @@ class Cansat(object):
         self.gz=round(self.bno055.gz,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
+        '''
         datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
                   + str(self.gps.Time) + ","\
@@ -143,6 +158,7 @@ class Cansat(object):
                   + str(self.Az).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6)
+                  '''
 #                   + str(self.encoder.cansat_speed).rjust(6) + ","\
 #                   + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
 #                   + str(self.x).rjust(6) + ","\
@@ -151,11 +167,22 @@ class Cansat(object):
 #                   + str(self.gx).rjust(6) + ","\
 #                   + str(self.gy).rjust(6) + ","\
 #                   + str(self.gz).rjust(6) + ","\
-                  
+        datalog = str(self.radio.cansat_rssi) + ","\
+                  + str(self.radio.lost_rssi)
         print(datalog)
         
+        if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
+            datalog = str(self.radio.cansat_rssi) + ","\
+                      + str(self.radio.lost_rssi) + ","\
+                      + str(np.mean(self.LogCansatRSSI)) + ","\
+                      + str(np.mean(self.LogLostRSSI)) + ","\
+                      + str(np.std(self.LogCansatRSSI)) + ","\
+                      + str(np.std(self.LogLostRSSI))+","\
+                      + "finish"
+            print(self.meanCansatRSSI)
         
-        with open('/home/pi/Desktop/0714kimura_SensorIntegTest/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+        
+        with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
             
     
@@ -168,6 +195,15 @@ class Cansat(object):
                   #+ str(self.rightmotor.velocity) + ","\
                   #+ str(self.leftmotor.velocity)
         self.radio.sendData(datalog) #データを送信
+        
+    def switchRadio(self):
+        datalog = str(self.state) + ","\
+                  + str(self.gps.Time) + ","\
+                  + str(self.gps.Lat) + ","\
+                  + str(self.gps.Lon) + ","\
+                  #+ str(self.rightmotor.velocity) + ","\
+                  #+ str(self.leftmotor.velocity)
+        self.radio.switchData(datalog) #データを送信    
     
     def sequence(self):
         if self.state == 0:
@@ -179,11 +215,13 @@ class Cansat(object):
         elif self.state == 3:
             self.landing()
         elif self.state == 4:
-            self.waiting()
+            self.starting()
         elif self.state == 5:
-            self.running()
+            self.measuring()
         elif self.state == 6:
-            self.goal()
+            self.running()
+        elif self.state == 7:
+            self.positioning()
         else:
             self.state = self.laststate #どこにも引っかからない場合何かがおかしいのでlaststateに戻してあげる
     
@@ -224,9 +262,9 @@ class Cansat(object):
     def dropping(self):
         if self.droppingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.droppingTime = time.time()
-            self.RED_LED.led_off()
-            self.BLUE_LED.led_off()
-            self.GREEN_LED.led_on()         
+            self.RED_LED.led_on()
+            self.BLUE_LED.led_on()
+            self.GREEN_LED.led_off()         
             
             
         #加速度が小さくなったら着地判定
@@ -250,9 +288,9 @@ class Cansat(object):
     def landing(self):
         if self.landingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.landingTime = time.time()
-            self.RED_LED.led_on()
-            self.BLUE_LED.led_on()
-            self.GREEN_LED.led_off()
+            self.RED_LED.led_off()
+            self.BLUE_LED.led_off()
+            self.GREEN_LED.led_on()
         
         if not self.landingTime == 0:
             if self.landstate == 0:
@@ -274,14 +312,55 @@ class Cansat(object):
                 else:
                     pass
     
-    def waiting(self):
-        if self.waitingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+    def starting(self):
+        if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.waitingTime = time.time()
+            self.RED_LED.led_on()
+            self.BLUE_LED.led_off()
+            self.GREEN_LED.led_on()
+        else:
+            self.countDistanceLoopStart=0
+            
+    def measuring(self):
+        if self.measureringTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+            self.measureringTime = time.time()
             self.RED_LED.led_off()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         else:
-            self.countDistanceLoopStart=0
+            if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
+                #self.switchRadio()#LoRaでログを送信
+                self.LogCansatRSSI += [self.radio.cansat_rssi]
+                self.LogLostRSSI += [self.radio.lost_rssi]
+                self.countSwitchLoop+=1
+            else:
+                #RSSIの平均とって距離計算
+                self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
+                self.meanLostRSSI=np.mean(self.LogLostRSSI)
+                '''
+                self.distanceCansatRSSI=self.radio.----(self.meanCansatRSSI)
+                self.distanceLostRSSI=self.radio.----(self.meanLostRSSI)
+                self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
+                self.n_dis_LogLostRSSI.append(self.distanceLostRSSI)
+                self.meandis=(self.distanceCansatRSSI+self.distanceLostRSSI)/2
+                self.n_meandisLog.append(self.meandis)
+                
+                '''
+                
+                #RSSIのデータ保管
+                self.n_LogCansatRSSI.append(self.LogCansatRSSI)
+                self.n_LogCansatRSSI.append(self.LogLostRSSI)
+                
+                self.meanCansatRSSI=0
+                self.meanLostRSSI=0
+                self.mesureringTime = 0
+                self.countSwitchLoop = 0
+                self.LogCansatRSSI=[]
+                self.LogLostRSSI=[]
+                self.state = 5
+                self.laststate = 5
+            
+        
     
     def running(self):
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -291,10 +370,10 @@ class Cansat(object):
             self.GREEN_LED.led_on()
         
         
-    def goal(self):
-        if self.goalTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+    def positioning(self):
+        if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.goalTime = time.time()
-            self.RED_LED.led_off()
+            self.RED_LED.led_on()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_off()
             
