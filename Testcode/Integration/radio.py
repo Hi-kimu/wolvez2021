@@ -8,7 +8,11 @@ class radio(object):
     
     def __init__(self):
         # ES920LRデバイス名
-        self.lora_device = "/dev/ttySOFT0"
+        # ラズパイ3で使うときはttySOFT0
+        # ラズパイ4で使うときはttyAMA1
+        self.lora_device = "/dev/ttyAMA1"
+        self.cansat_rssi=0
+        self.lost_rssi=0
         """
         #config設定
         self.channel = 15   #d
@@ -43,3 +47,33 @@ class radio(object):
         #print(datalog)
         self.sendDevice.cmd_lora(datalog)
     
+    def switchData(self, datalog):
+        self.sendDevice.cmd_lora(datalog)
+        while True:
+            if self.sendDevice.device.inWaiting() > 0:
+                
+                line = self.sendDevice.device.readline()
+                line = line.decode("utf-8")
+                
+                #print('wait lost...')
+                
+                if line.find('RSSI') >= 0 and line.find('information') == -1:
+                    
+                    log = line
+                    log_list = log.split('):Receive Data(')
+                    
+                    #print(log_list)
+                    # 受信電波強度
+
+                    self.cansat_rssi = int(log_list[0][5:8])#0-4
+                    #self.cansat_rssi = log_list[0][5:11]#0-4
+                    #print(rssi)#自分が受けたRSSI
+                    # 受信フレーム
+                    self.lost_rssi = int(log_list[1][0:3])#1-最後から3番目の1個前まで
+                    #print('Receive'+ data)
+                    #print('-------------')
+                    break
+                  
+
+        
+        

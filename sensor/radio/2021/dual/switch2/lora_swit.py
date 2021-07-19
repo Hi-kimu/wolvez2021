@@ -70,6 +70,7 @@ class LoraSwitClass:
 
                                     
                 
+<<<<<<< HEAD
                     
                 except KeyboardInterrupt:
                     self.switDevice.close()
@@ -90,3 +91,6 @@ class LoraSwitClass:
                 writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
                 writer.writerow(rssi_list) # csvファイルに書き込み
                 writer.writerow(data_list)  
+=======
+
+>>>>>>> 49a7657f2e4ee4578e1f542fd62f28c1793467fb

@@ -9,16 +9,17 @@ import constant as ct
 
 can=cansat.Cansat()
 can.setup()
-
+GPIO.setwarnings(False)
 
 try:
     while True:
+        #can.integ()
         can.sensor()
-        can.integ()
         time.sleep(0.05)
         can.sequence()
 
 except KeyboardInterrupt:
     print('finished')
+    can.keyboardinterrupt()
     GPIO.cleanup()
     pass
