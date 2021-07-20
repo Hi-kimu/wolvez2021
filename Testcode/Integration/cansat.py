@@ -14,6 +14,7 @@ import sys
 import numpy as np
 import datetime
 import os
+import csv
 
 #クラス読み込み
 import constant as ct
@@ -24,6 +25,8 @@ import radio
 import bno055
 import led
 import servomotor
+
+
 
 class Cansat(object):
     
@@ -98,8 +101,13 @@ class Cansat(object):
         self.filename = '{0:%Y%m%d}'.format(date)
         self.filename_hm = '{0:%Y%m%d%H%M}'.format(date)
         
+        #csv
+        self.cansatrssi=list()
+        self.lostrssi=list()
+        
         if not os.path.isdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename)):
             os.mkdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
+            
   
     
     def setup(self):
@@ -170,7 +178,7 @@ class Cansat(object):
         datalog = str(self.radio.cansat_rssi) + ","\
                   + str(self.radio.lost_rssi)
         print(datalog)
-        
+        '''
         if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
             datalog = str(self.radio.cansat_rssi) + ","\
                       + str(self.radio.lost_rssi) + ","\
@@ -185,6 +193,39 @@ class Cansat(object):
         with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
             
+        '''
+        self.cansatrssi.append(str(self.radio.cansat_rssi))
+        self.lostrssi.append(str(self.radio.lost_rssi))
+        
+        if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
+            
+            self.cansatrssi.append(str(self.radio.cansat_rssi))
+            self.lostrssi.append(str(self.radio.lost_rssi))
+            
+                       
+            self.cansatrssi.insert(0,str(np.mean(self.LogCansatRSSI)))
+            self.lostrssi.insert(0, str(np.mean(self.LogLostRSSI)))
+            
+            self.cansatrssi.insert(1,str(np.std(self.LogCansatRSSI)))
+            self.lostrssi.insert(1,str(np.std(self.LogLostRSSI)))
+            
+            
+            
+            position = input("position(m):")
+            self.cansatrssi.insert(0, position + "m")
+            self.lostrssi.insert(0, position + "m")
+            self.cansatrssi.insert(0, "cansat")
+            self.lostrssi.insert(0, "lost")    
+            
+            
+            with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
+                writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
+                writer.writerow(self.cansatrssi) # csvファイルに書き込み
+                writer.writerow(self.lostrssi)  
+            
+            self.cansatrssi=list()
+            self.lostrssi=list()
+#         ------------------------------------------------------------------------------------------
     
     
     def sendRadio(self):

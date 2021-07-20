@@ -35,40 +35,33 @@ class LoraSwitClass:
             position = input("position(m):")
             rssi_list.append(position + "m")
             data_list.append(position + "m")
-
+            
+            # receive after send
+            while self.switDevice.device.inWaiting() == 0:
+                senddata = 'aaaa'
+                print('<-- SEND -- [{} ]'.format(senddata))
+                self.switDevice.cmd_lora('{}'.format(senddata))  
+                time.sleep(0.5) 
+        
             count = 0
-            while count < 30: # 50個データがたまるまでループ
+            while count < 10: # 50個データがたまるまでループ
                 try:
                     print(count)
                     print(rssi_list)
                     print(data_list)
-                    # 送るデータ
-                    senddata = 'aaaa'
-                    print('<-- SEND -- [{} ]'.format(senddata))
-                    self.switDevice.cmd_lora('{}'.format(senddata))
-                   #time_now = time.time()
-                   # while True:
-                   #     print(time.time()-time_now)
-                   #     if time.time()-time_now>2:
-                   #         print("timeout")
-                   #         break
-                    time.sleep(2.0)    #seconds              
+                    
+                    
+                              
+                               
                     
                     # ES920LRモジュールから値を取得   
-                    while self.switDevice.device.inWaiting() > 3:
-                            #print("recieved")
-                            #print(time.time())
+                    if self.switDevice.device.inWaiting() > 0:
                         
                             line = self.switDevice.device.readline()
                             line = line.decode("utf-8")
-                            #print("decode")
-                            #print(time.time())
-                            print(line)
-                            
                         
                             #print(line)
                             if line.find('RSSI') >= 0 and line.find('information') == -1:
-                                print("findRSSI")
                                 
                                 log = line
                                 log_list = log.split('):Receive Data(')
