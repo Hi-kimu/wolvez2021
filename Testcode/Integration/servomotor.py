@@ -16,3 +16,4 @@ class servomotor():
         
     def stop(self):
         self.pwm.stop()
+        self.pwm.ChangeDutyCycle(0.0)

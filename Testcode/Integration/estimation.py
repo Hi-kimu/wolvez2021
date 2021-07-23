@@ -114,7 +114,7 @@ class estimation():
     def est_v_w(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
-        self.iteration=500
+        self.iteration=900
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -133,7 +133,7 @@ class estimation():
                     self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
                 
                 self.enc_ave_time=np.mean(self.enc_del_time)
-                self.mot_speed=1/(898*self.enc_ave_time)
+                self.mot_speed=1/(733*self.enc_ave_time)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time=[]
@@ -159,7 +159,7 @@ class estimation():
                     self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
                 
                 self.enc_ave_time2=np.mean(self.enc_del_time2)
-                self.mot_speed2=1/(898*self.enc_ave_time2)
+                self.mot_speed2=1/(733*self.enc_ave_time2)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time2=[]
@@ -168,8 +168,8 @@ class estimation():
             self.prev_data2=self.encoded2
             self.prev_angle2 = self.angle2
         
-        self.cansat_speed = 2*3.14*(0.058/2)*self.mot_speed + 2*3.14*(0.058/2)*self.mot_speed2
-        self.cansat_rad_speed = (0.058/0.183)*self.mot_speed - (0.058/0.183)*self.mot_speed2
+        self.cansat_speed = 2*3.14*(0.0685/2)*self.mot_speed + 2*3.14*(0.0685/2)*self.mot_speed2
+        self.cansat_rad_speed = (0.0685/0.195)*self.mot_speed - (0.0685/0.195)*self.mot_speed2
         
         return self.cansat_speed, self.cansat_rad_speed
     
