@@ -112,8 +112,8 @@ class estimation():
     def callback2(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
-        self.keisan = 0
-        self.keisan2 = 0
+        self.keisan = 1
+        self.keisan2 = 1
         self.hantei = 0
         
         while self.keisan<=5:
@@ -126,7 +126,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time.append(time.time())
             
-            if len(self.enc_time)==733:
+            if len(self.enc_time)==871:
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time=[]
                 self.keisan = self.keisan + 1
@@ -145,7 +145,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time2.append(time.time())
             
-            if len(self.enc_time2)==733:
+            if len(self.enc_time2)==871:
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time2=[]
                 self.keisan2 = self.keisan2 + 1
@@ -161,6 +161,7 @@ class estimation():
     def est_v_w(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
+        self.pulse=871
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -179,7 +180,7 @@ class estimation():
                     self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
                 
                 self.enc_ave_time=np.mean(self.enc_del_time)
-                self.mot_speed=1/(898*self.enc_ave_time)
+                self.mot_speed=1/(self.pulse*self.enc_ave_time)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time=[]
@@ -205,7 +206,7 @@ class estimation():
                     self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
                 
                 self.enc_ave_time2=np.mean(self.enc_del_time2)
-                self.mot_speed2=1/(898*self.enc_ave_time2)
+                self.mot_speed2=1/(self.pulse*self.enc_ave_time2)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time2=[]
@@ -214,8 +215,8 @@ class estimation():
             self.prev_data2=self.encoded2
             self.prev_angle2 = self.angle2
         
-        self.cansat_speed = 2*3.14*(0.0685/2)*self.mot_speed + 2*3.14*(0.0685/2)*self.mot_speed2
-        self.cansat_rad_speed = (0.0685/0.195)*self.mot_speed - (0.0685/0.195)*self.mot_speed2
+        self.cansat_speed = 2*3.14*(0.0665/2)*self.mot_speed + 2*3.14*(0.0665/2)*self.mot_speed2
+        self.cansat_rad_speed = (0.0665/0.196)*self.mot_speed - (0.0665/0.196)*self.mot_speed2
         
         return self.cansat_speed, self.cansat_rad_speed
     
@@ -225,4 +226,3 @@ class estimation():
         q_new=q+w*t
         
         return x_new,y_new,q_new
-    
