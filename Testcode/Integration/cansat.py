@@ -226,16 +226,6 @@ class Cansat(object):
             self.cansatrssi.insert(1,str(np.std(self.LogCansatRSSI)))
             self.lostrssi.insert(1,str(np.std(self.LogLostRSSI)))
             
-                        #定義式より推定
-#             N=2
-#             MP=-45
-#             cansatestimate_definition=10**((MP-meancansatrssi)/(10*N))
-#             lostestimate_definition=10**((MP-meanlostrssi)/(10*N))
-#             
-#             self.cansatrssi.insert(2,str(cansatestimate_definition))
-#             self.lostrssi.insert(2,str(lostestimate_definition))
-#             print('カンサット:定義式からの推定'+cansatestimate_definition)
-#             print('ロスト機:定義式からの推定'+lostestimate_definition)
             
             
             position = input("position(m):")
