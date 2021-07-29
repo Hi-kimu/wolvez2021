@@ -13,6 +13,7 @@ x=0
 y=0
 q=0
 del_t=0.2
+hantei = 0
 
 start_time=time.time()
 print("cansat-x :",x,"[m]")
@@ -21,8 +22,8 @@ print("cansat-q :",q,"[rad]")
 
 try:
     print("motor run") 
-    MotorR.go(90)
-    MotorL.go(60)
+    MotorR.go(81)
+    MotorL.go(80)
     
     while True:
         t1=time.time()
@@ -35,9 +36,28 @@ try:
         print("cansat-x :",x,"[m]")
         print("cansat-y :",y,"[m]")
         print("cansat-q :",q,"[rad]")
+# try:
+#     print("motor run") 
+#     MotorR.go(82)
+#     MotorL.go(80)
+#     
+#     while hantei == 0:
+#         hantei = Encoder.callback2(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
+#         if hantei == 1:
+#             break
+#     MotorR.stop()
+#     MotorL.stop()
+#     GPIO.cleanup()
         
     #time.sleep(1)
 except KeyboardInterrupt:
+    t2=time.time()
+    x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
+    print("cansat speed :",cansat_speed,"[m/s]")
+    print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
+    print("cansat-x :",x,"[m]")
+    print("cansat-y :",y,"[m]")
+    print("cansat-q :",q,"[rad]")
     end_time=time.time()
     print("motor stop")
     print(end_time-start_time,"[s]")
