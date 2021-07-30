@@ -52,7 +52,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 5#この変数でステートを管理している．センサ統合試験をするときは5にするといい．
+        self.state = 0
         self.laststate = 0
         self.landstate = 0
         
@@ -61,7 +61,7 @@ class Cansat(object):
         self.y=0
         self.q=0
         self.t1=0
-        self.t2=0
+        self.t2=0 
      
         #n点測位用の変数
         self.meanCansatRSSI=0
@@ -124,20 +124,23 @@ class Cansat(object):
         self.timer = int(self.timer)
         self.gps.gpsread()
         self.bno055.bnoread()
-#         self.t1=time.time()
-#         self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
-#         self.t2=time.time()
-#         self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
+        
+        self.t1=time.time()
+        self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
+        self.t2=time.time()
+        self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
+        
         self.writeData()#txtファイルへのログの保存
         
         
         if not self.state == 1: #preparingのときは電波を発しない
             #self.sendRadio()#LoRaでログを送信
-            self.switchRadio()
+            #self.switchRadio()
+            pass
 
     def integ(self):#センサ統合用
-        self.rightmotor.go(100)
-        self.leftmotor.go(100)
+        self.rightmotor.go(80)
+        self.leftmotor.go(80)
               
     def keyboardinterrupt(self):
         self.RED_LED.led_on()
@@ -155,29 +158,30 @@ class Cansat(object):
         self.gz=round(self.bno055.gz,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
-        '''
+        
         datalog = str(self.timer) + ","\
-                  + str(self.state) + ","\
-                  + str(self.gps.Time) + ","\
-                  + str(self.gps.Lat).rjust(6) + ","\
-                  + str(self.gps.Lon).rjust(6) + ","\
-                  + str(self.Ax).rjust(6) + ","\
-                  + str(self.Ay).rjust(6) + ","\
-                  + str(self.Az).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
-                  + str(self.leftmotor.velocity).rjust(6)
-                  '''
-#                   + str(self.encoder.cansat_speed).rjust(6) + ","\
-#                   + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
-#                   + str(self.x).rjust(6) + ","\
-#                   + str(self.y).rjust(6) + ","\
-#                   + str(self.q).rjust(6)
+                  + str(self.leftmotor.velocity).rjust(6) + ","\
+                  + str(self.encoder.cansat_speed).rjust(6) + ","\
+                  + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
+                  + str(self.x).rjust(6) + ","\
+                  + str(self.y).rjust(6) + ","\
+                  + str(self.q).rjust(6) 
+#                   + str(self.state) + ","\
+#                   + str(self.gps.Time) + ","\
+#                   + str(self.gps.Lat).rjust(6) + ","\
+#                   + str(self.gps.Lon).rjust(6) + ","\
+#                   + str(self.Ax).rjust(6) + ","\
+#                   + str(self.Ay).rjust(6) + ","\
+#                   + str(self.Az).rjust(6) + ","\
+                  
 #                   + str(self.gx).rjust(6) + ","\
 #                   + str(self.gy).rjust(6) + ","\
-#                   + str(self.gz).rjust(6) + ","\
-        datalog = str(self.radio.cansat_rssi) + ","\
-                  + str(self.radio.lost_rssi)
+#                   + str(self.gz).rjust(6) 
+#         datalog = str(self.radio.cansat_rssi) + ","\
+#                   + str(self.radio.lost_rssi)
         print(datalog)
+<<<<<<< HEAD
         '''
         if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
             datalog = str(self.radio.cansat_rssi) + ","\
@@ -189,6 +193,19 @@ class Cansat(object):
                       + "finish"
             print(self.meanCansatRSSI)
         
+=======
+#         
+#         if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
+#             datalog = str(self.radio.cansat_rssi) + ","\
+#                       + str(self.radio.lost_rssi) + ","\
+#                       + str(np.mean(self.LogCansatRSSI)) + ","\
+#                       + str(np.mean(self.LogLostRSSI)) + ","\
+#                       + str(np.std(self.LogCansatRSSI)) + ","\
+#                       + str(np.std(self.LogLostRSSI))+","\
+#                       + "finish"
+#             print(self.meanCansatRSSI)
+#         
+>>>>>>> 3f83235c5e983c88f4d88fe7dd29af0d90944874
         
         with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
@@ -336,14 +353,15 @@ class Cansat(object):
         if not self.landingTime == 0:
             if self.landstate == 0:
                 self.servomotor.servo_angle(90)#サーボモータ動かしてパラ分離
+                self.servomotor.stop()
                 if time.time()-self.landingTime > ct.const.RELEASING_TIME_THRE:
                     #self.servomotor.servo_angle(0)
                     self.pre_motorTime = time.time()
                     self.landstate = 1
             #一定時間モータを回してパラシュートから離れる
             elif self.landstate == 1:
-                self.rightmotor.go(100)
-                self.leftmotor.go(100)
+                self.rightmotor.go(80)
+                self.leftmotor.go(80)
                 
                 if time.time()-self.pre_motorTime > ct.const.PRE_MOTOR_TIME_THRE:
                     self.rightmotor.stop()
