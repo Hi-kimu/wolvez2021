@@ -3,8 +3,16 @@
 Keio Wolve'Z cansat2021
 mission function
 Author Hikaru Kimura
-last update:2021/6/30
+last update:2021/7/30
 
+"""
+"""
+ct.const.SHADOW_EDGE_LENGTH
+ct.count.MEASURMENT_INTERVAL
+ct.const.MAX_SHADOW_EDGE_LENGTH
+ct.const.ANGLE_THRE
+ct.const.ANGLE_COUNT_THRE
+ct.const.MAX_MEASURING_COUNT
 """
 
 #ライブラリの読み込み
@@ -15,6 +23,8 @@ import numpy as np
 import datetime
 import os
 import csv
+import math
+
 
 #クラス読み込み
 import constant as ct
@@ -31,6 +41,7 @@ import servomotor
 class Cansat(object):
     
     def __init__(self):
+        GPIO.setwarnings(False)
         #オブジェクトの生成
         self.rightmotor = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
         self.leftmotor = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
@@ -48,24 +59,52 @@ class Cansat(object):
         self.startTime = time.time()
         self.timer = 0
         self.landstate = 0 #landing stateの中でモータを一定時間回すためにlandのなかでもステート管理するため
+        self.startstate = 0
         self.v_right = 100
         self.v_left = 100
         
         #変数
-        self.state = 0
+        self.state = 6
         self.laststate = 0
         self.landstate = 0
+        
+        #スタート地点移動用の緯度経度
+        self.startlon=139.654
+        self.startlat=35.555
+        self.realshadow=[[0,0],#永久影の設定15×15
+                         [0,ct.const.SHADOW_EDGE_LENGTH],
+                         [ct.const.SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH],
+                         [ct.const.SHADOW_EDGE_LENGTH,0]]
+        self.shadow=[[-ct.const.MAX_SHADOW_EDGE_LENGTH,-ct.const.MAX_SHADOW_EDGE_LENGTH],#拡張永久影の設定25×25
+                     [-ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
+                     [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
+                     [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,-ct.const.MAX_SHADOW_EDGE_LENGTH]]
+        self.startpoint=[[-ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH/2],#スタート地点の設定
+                         [ct.const.SHADOW_EDGE_LENGTH/2,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
+                         [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,2/ct.const.SHADOW_EDGE_LENGTH],
+                         [ct.const.SHADOW_EDGE_LENGTH/2,-ct.const.MAX_SHADOW_EDGE_LENGTH]]
+        self.startshadowTHRE=[[-10,-5],#スタート地点の許容範囲[-10<x<-5 20<y<25 20<x<25 -10<y<-5]
+                              [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,25],
+                              [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,25],
+                              [-10,-5]]
+        self.close_startpoint=-1
+        self.starttheta=0
+        self.anglestate=0
         
         #オドメトリ用の変数
         self.x=0
         self.y=0
         self.q=0
         self.t1=0
-        self.t2=0 
+        self.t2=0
+        self.azimuth=[90, 0, 270, 180]
      
         #n点測位用の変数
+        self.measuringcount=0#n点測量目をこの変数で管理
         self.meanCansatRSSI=0
         self.meanLostRSSI=0
+        self.LogData = list()
+        self.n_LogData = list()
         self.LogCansatRSSI=list()
         self.LogLostRSSI=list()
         self.n_dis_LogCansatRSSI=list()
@@ -73,6 +112,11 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
+        
+        #探査機推定時用の変数
+        self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
+        self.n_pdf=list()
+        self.positioning_count=0
      
         #stateに入っている時刻の初期化
         self.preparingTime = 0
@@ -84,6 +128,7 @@ class Cansat(object):
         self.measureringTime = 0
         self.runningTime = 0
         self.positioningTime = 0
+        self.finishTime = 0
         
         #state管理用変数初期化
         self.countPreLoop = 0
@@ -125,18 +170,17 @@ class Cansat(object):
         self.gps.gpsread()
         self.bno055.bnoread()
         
-        self.t1=time.time()
-        self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
-        self.t2=time.time()
-        self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
-        
         self.writeData()#txtファイルへのログの保存
-        
-        
         if not self.state == 1: #preparingのときは電波を発しない
             #self.sendRadio()#LoRaでログを送信
             #self.switchRadio()
             pass
+            
+    def odometry(self):
+        self.t1=time.time()
+        self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
+        self.t2=time.time()
+        self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
 
     def integ(self):#センサ統合用
         self.rightmotor.go(80)
@@ -158,8 +202,15 @@ class Cansat(object):
         self.gz=round(self.bno055.gz,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
-        
         datalog = str(self.timer) + ","\
+                  + str(self.state) + ","\
+                  + str(self.gps.Time) + ","\
+                  + str(self.gps.Lat).rjust(6) + ","\
+                  + str(self.gps.Lon).rjust(6) + ","\
+                  + str(self.Ax).rjust(6) + ","\
+                  + str(self.Ay).rjust(6) + ","\
+                  + str(self.Az).rjust(6) + ","\
+                  + str(self.gx).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6) + ","\
                   + str(self.encoder.cansat_speed).rjust(6) + ","\
@@ -167,21 +218,7 @@ class Cansat(object):
                   + str(self.x).rjust(6) + ","\
                   + str(self.y).rjust(6) + ","\
                   + str(self.q).rjust(6) 
-#                   + str(self.state) + ","\
-#                   + str(self.gps.Time) + ","\
-#                   + str(self.gps.Lat).rjust(6) + ","\
-#                   + str(self.gps.Lon).rjust(6) + ","\
-#                   + str(self.Ax).rjust(6) + ","\
-#                   + str(self.Ay).rjust(6) + ","\
-#                   + str(self.Az).rjust(6) + ","\
-                  
-#                   + str(self.gx).rjust(6) + ","\
-#                   + str(self.gy).rjust(6) + ","\
-#                   + str(self.gz).rjust(6) 
-#         datalog = str(self.radio.cansat_rssi) + ","\
-#                   + str(self.radio.lost_rssi)
         print(datalog)
-<<<<<<< HEAD
         '''
         if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
             datalog = str(self.radio.cansat_rssi) + ","\
@@ -192,24 +229,7 @@ class Cansat(object):
                       + str(np.std(self.LogLostRSSI))+","\
                       + "finish"
             print(self.meanCansatRSSI)
-        
-=======
-#         
-#         if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
-#             datalog = str(self.radio.cansat_rssi) + ","\
-#                       + str(self.radio.lost_rssi) + ","\
-#                       + str(np.mean(self.LogCansatRSSI)) + ","\
-#                       + str(np.mean(self.LogLostRSSI)) + ","\
-#                       + str(np.std(self.LogCansatRSSI)) + ","\
-#                       + str(np.std(self.LogLostRSSI))+","\
-#                       + "finish"
-#             print(self.meanCansatRSSI)
-#         
->>>>>>> 3f83235c5e983c88f4d88fe7dd29af0d90944874
-        
-        with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
-            test.write(datalog + '\n')
-            
+        '''
         '''
         self.cansatrssi.append(str(self.radio.cansat_rssi))
         self.lostrssi.append(str(self.radio.lost_rssi))
@@ -243,7 +263,7 @@ class Cansat(object):
             self.cansatrssi=list()
             self.lostrssi=list()
 #         ------------------------------------------------------------------------------------------
-    
+    '''
     
     def sendRadio(self):
         datalog = str(self.state) + ","\
@@ -280,10 +300,12 @@ class Cansat(object):
             self.running()
         elif self.state == 7:
             self.positioning()
+        elif self.state == 8:
+            self.finish()
         else:
             self.state = self.laststate #どこにも引っかからない場合何かがおかしいのでlaststateに戻してあげる
     
-    def preparing(self):#フライトピンを使う場合はいらないかも（暫定：時間が立ったら移行）
+    def preparing(self):#時間が立ったら移行
         if self.preparingTime == 0:
             self.preparingTime = time.time()#時刻を取得
             self.RED_LED.led_on()
@@ -305,14 +327,13 @@ class Cansat(object):
             self.GREEN_LED.led_off()
             self.rightmotor.stop()
             self.leftmotor.stop()
-        
-        
+                
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
             if self.countFlyLoop > ct.const.COUNT_FLIGHTPIN_THRE:#一定時間HIGHだったらステート移行
                 self.state = 2
                 self.laststate = 2
-                
+               
         else:
             self.countFlyLoop = 0 #何故かLOWだったときカウントをリセット
     
@@ -323,8 +344,7 @@ class Cansat(object):
             self.RED_LED.led_on()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_off()         
-            
-            
+      
         #加速度が小さくなったら着地判定
         if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.ACC_THRE,2):#加速度が閾値以下で着地判定
             self.countDropLoop+=1
@@ -333,15 +353,6 @@ class Cansat(object):
                 self.laststate = 3
         else:
             self.countDropLoop = 0 #初期化の必要あり
-            
-            
-        """
-        #（予備）時間で着地判定
-        if not self.droppingTime == 0:
-            if time.time() - self.droppingTime > ct.const.LANDING_TIME_THRE:
-                self.state = 3
-                self.laststate = 3
-        """
         
     def landing(self):
         if self.landingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -360,9 +371,9 @@ class Cansat(object):
                     self.landstate = 1
             #一定時間モータを回してパラシュートから離れる
             elif self.landstate == 1:
-                self.rightmotor.go(80)
-                self.leftmotor.go(80)
-                
+                self.rightmotor.go(100)
+                self.leftmotor.go(100)
+
                 if time.time()-self.pre_motorTime > ct.const.PRE_MOTOR_TIME_THRE:
                     self.rightmotor.stop()
                     self.leftmotor.stop()
@@ -373,19 +384,79 @@ class Cansat(object):
     
     def starting(self):
         if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            self.waitingTime = time.time()
+            self.startingTime = time.time()
             self.RED_LED.led_on()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_on()
-        else:
-            self.countDistanceLoopStart=0
+            startpointdis=list()
+        else:#4つのスタート地点から一番近い点へ移動
+            #原点と着陸地点の距離と方位角を取得
+            if self.startstate==0:
+                self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                #極座標から直交座標へ変換
+                self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
+                self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
+                startpointdis=list()
+                for i in range(3):
+                    startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
+                
+                self.close_startpoint=startpointdis.index(min(startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
+                self.starttheta=math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y,self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
+                self.startstate=1
+            else:
+                if math.fabs(self.gx - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
+                    self.rightmotor.go(60)
+                    self.leftmotor.back(60)
+                    '''
+                    self.anglestate+=1
+                    if self.anglestate < ct.const.ANGLE_COUNT_THRE:
+                        self.rightmotor.go(60)
+                        self.leftmotor.back(60)
+                        
+                    else:
+                        self.rightmotor.stop()
+                        self.lefttmotor.stop()
+                        if self.anglestate > ct.const.ANGLE_COUNT_THRE+10:
+                            self.anglestate=0
+                           ''' 
+                else:#姿勢が変えらたら直進
+                    self.rightmotor.go(100)
+                    self.leftmotor.back(100)
+                    self.odometry()
+                    
+                    #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
+                    if self.close_startpoint==0 or self.close_startpoint==2:
+                        if  self.startshadowTHRE[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE[self.close_startpoint][1]:
+                            self.rightmotor.stop()
+                            self.lefttmotor.stop()
+                            self.state = 5
+                            self.laststate = 5
+                    
+                    elif self.close_startpoint==1 or self.close_startpoint==3:
+                        if  self.startshadowTHRE[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE[self.close_startpoint][1]:
+                            self.rightmotor.stop()
+                            self.lefttmotor.stop()
+                            self.state = 5
+                            self.laststate = 5
+                            
+                if time.time() - self.startingTime > 30:#30秒経ってもスタート地点に着いてない場合は最初からやりなおす
+                    self.startstate=0
+                
+                
             
     def measuring(self):
         if self.measureringTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            self.measureringTime = time.time()
+            self.measureringTimeLog[self.measuringcount] = time.time()
             self.RED_LED.led_off()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
+            self.rightmotor.stop()
+            self.lefttmotor.stop()
+            if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
+                self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                #極座標から直交座標へ変換
+                self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
+                self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
         else:
             if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
                 #self.switchRadio()#LoRaでログを送信
@@ -405,7 +476,9 @@ class Cansat(object):
                 self.n_meandisLog.append(self.meandis)
                 
                 '''
-                
+                #n点測量後に使用するデータを格納
+                self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI)]
+                self.n_LogData.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
                 self.n_LogCansatRSSI.append(self.LogLostRSSI)
@@ -416,10 +489,29 @@ class Cansat(object):
                 self.countSwitchLoop = 0
                 self.LogCansatRSSI=[]
                 self.LogLostRSSI=[]
-                self.state = 5
-                self.laststate = 5
+                self.LogData=[]
+                
+                if self.measuringcount == ct.const.MAX_MEASURING_COUNT:
+                    self.state = 7
+                    self.laststate = 7
+                
+                else:
+                    self.measuringcount+=1#n点測量目
+                    self.state = 6
+                    self.laststate = 6
             
-        
+    def caseDiscrimination(self):
+        if self.x < 0 and self.y < ct.const.SHADOW_EDGE_LENGTH:
+            self.case=0
+        elif self.x < ct.const.SHADOW_EDGE_LENGTH and self.y > ct.const.SHADOW_EDGE_LENGTH:
+            self.case=1
+        elif self.x > ct.const.SHADOW_EDGE_LENGTH and self.y > 0:
+            self.case=2
+        elif self.x > 0 and self.y < 0:
+            self.case=3
+        else:#永久影に入っちゃっている場合
+            self.case=4
+    
     
     def running(self):
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -428,17 +520,75 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         
-        
+        else:#Case判定
+            self.caseDiscrimination()#Case判定
+            if self.case == 4:#永久影からの脱出
+                self.rightmotor.go(60)
+                self.leftmotor.go(80)
+                self.odometry()
+            else:
+                if math.sqrt((self.x - self.LogData[self.measuringcount][1])**2 + (self.y - self.LogData[self.measuringcount][2])**2) > ct.count.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
+                        self.rightmotor.stop()
+                        self.lefttmotor.stop()
+                        self.state = 5
+                        self.laststate = 5
+                else:
+                    if math.fabs(self.q - self.azimuth[self.case]) > ct.const.ANGLE_THRE:#姿勢を変更
+                        self.rightmotor.go(60)
+                        self.leftmotor.back(60)
+                        self.odometry()
+                    else:#姿勢を変えたら直進
+                        self.rightmotor.go(100)
+                        self.leftmotor.go(100)
+                        self.odometry()
+                        
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            self.goalTime = time.time()
+            self.positioningTime = time.time()
             self.RED_LED.led_on()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_off()
-            
             self.rightmotor.stop()
             self.leftmotor.stop()
-           
+        else:
+            if self.positioning_count == self.self.measuringcount:
+                self.n_pdf_sum=sum(self.n_pdf)
+                self.graph(self.n_pdf_sum)
+                self.state = 8
+                self.laststate = 8
+            else:
+                self.n_pdf.append(self.pdf(self.n_LogData[self.positioning_count][1],
+                                      self.n_LogData[self.positioning_count][2],
+                                      self.n_LogData[self.positioning_count][3]))
+                self.positioning_count +=1
+        
+    def finish(self):
+        if self.finishTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+            self.finishTime = time.time()
+            self.RED_LED.led_off()
+            self.BLUE_LED.led_off()
+            self.GREEN_LED.led_off()
+        
+    def pdf(self,xc,yc,r):
+        w=3
+        return 0.5*np.exp(-((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*r**2))*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*math.pi*r**2)       
+             
+    def graph(self,Z):
+        Zc=np.unravel_index(np.argmax(Z), Z.shape)
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        surf=ax.plot_surface(self.X, self.Y, Z, cmap=plt.cm.jet,linewidth=0, antialiased=False)
+        ax.scatter(x[Zc[1]], y[Zc[0]], np.max(Z),s = 40,c='k',)
+        ax.set_xlim(-30.01, 30.01)
+        ax.set_ylim(-30.01, 30.01)
+        ax.set_zlim(0.0, 0.5)
+        ax.view_init(30, 30)
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        plt.show()
 
 if __name__ == "__main__":
     pass
+
