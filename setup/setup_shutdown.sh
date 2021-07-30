@@ -15,11 +15,11 @@ GPIO.setup(22,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 try:
     while True:
-        GPIO.wait_for_edge(25, GPIO.FALLING)
+        GPIO.wait_for_edge(22, GPIO.FALLING)
         sw_counter = 0
 
         while True:
-            sw_status = GPIO.input(25)
+            sw_status = GPIO.input(22)
 
             if sw_status == 0:
                 sw_counter = sw_counter + 1
