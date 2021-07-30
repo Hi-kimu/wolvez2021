@@ -6,14 +6,6 @@ Author Hikaru Kimura
 last update:2021/7/30
 
 """
-"""
-ct.const.SHADOW_EDGE_LENGTH
-ct.count.MEASURMENT_INTERVAL
-ct.const.MAX_SHADOW_EDGE_LENGTH
-ct.const.ANGLE_THRE
-ct.const.ANGLE_COUNT_THRE
-ct.const.MAX_MEASURING_COUNT
-"""
 
 #ライブラリの読み込み
 import time
@@ -35,8 +27,6 @@ import radio
 import bno055
 import led
 import servomotor
-
-
 
 class Cansat(object):
     
@@ -64,7 +54,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 6
+        self.state = 0
         self.laststate = 0
         self.landstate = 0
         
@@ -396,7 +386,7 @@ class Cansat(object):
                 #極座標から直交座標へ変換
                 self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
                 self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
-                startpointdis=list()
+                
                 for i in range(3):
                     startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
                 
