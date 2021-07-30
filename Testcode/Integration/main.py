@@ -13,7 +13,7 @@ GPIO.setwarnings(False)
 
 try:
     while True:
-        can.integ()
+        #can.integ()
         can.sensor()
         time.sleep(0.05)
         can.sequence()
@@ -22,4 +22,6 @@ except KeyboardInterrupt:
     print('finished')
     can.keyboardinterrupt()
     GPIO.cleanup()
+    can.rightmotor.stop()
+    can.leftmotor.stop()
     pass

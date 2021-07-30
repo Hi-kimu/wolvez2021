@@ -1,16 +1,16 @@
 import serial
+import math
 import micropyGPS
 import time
 import threading
 
-class Gps(object):        
+class GPS(object):        
     
     def __init__(self):
         self.mgps = micropyGPS.MicropyGPS(9,'dd') 
         self.Time = 0
         self.Lat = 0
         self.Lon = 0
-        self.gpsdis = 0
         #self.gps_device = "dev/serial0"  # ES920LRデバイス名
         
         
@@ -46,7 +46,6 @@ class Gps(object):
              #print('緯度：', self.Lat, ",", end='')
              #print('経度：', self.Lon)
         #time.sleep(1.0) #ここ変える
-        
     def vincenty_inverse(self,lat1, lon1, lat2, lon2):
         ellipsoid=None
         # 楕円体
@@ -69,7 +68,7 @@ class Gps(object):
         ITERATION_LIMIT = 1000
 
         # 差異が無ければ0.0を返す
-        if isclose(lat1, lat2) and isclose(lon1, lon2):
+        if math.isclose(lat1, lat2) and math.isclose(lon1, lon2):
             return {
                 'distance': 0.0,
                 'azimuth1': 0.0,
@@ -81,19 +80,19 @@ class Gps(object):
         a, ƒ = GEODETIC_DATUM.get(ellipsoid, GEODETIC_DATUM.get(ELLIPSOID_GRS80))
         b = (1 - ƒ) * a
 
-        φ1 = radians(lat1)
-        φ2 = radians(lat2)
-        λ1 = radians(lon1)
-        λ2 = radians(lon2)
+        φ1 = math.radians(lat1)
+        φ2 = math.radians(lat2)
+        λ1 = math.radians(lon1)
+        λ2 = math.radians(lon2)
 
         # 更成緯度(補助球上の緯度)
-        U1 = atan((1 - ƒ) * tan(φ1))
-        U2 = atan((1 - ƒ) * tan(φ2))
+        U1 = math.atan((1 - ƒ) * math.tan(φ1))
+        U2 = math.atan((1 - ƒ) * math.tan(φ2))
 
-        sinU1 = sin(U1)
-        sinU2 = sin(U2)
-        cosU1 = cos(U1)
-        cosU2 = cos(U2)
+        sinU1 = math.sin(U1)
+        sinU2 = math.sin(U2)
+        cosU1 = math.cos(U1)
+        cosU2 = math.cos(U2)
 
         # 2点間の経度差
         L = λ2 - λ1
@@ -104,11 +103,11 @@ class Gps(object):
         # 以下の計算をλが収束するまで反復する
         # 地点によっては収束しないことがあり得るため、反復回数に上限を設ける
         for i in range(ITERATION_LIMIT):
-            sinλ = sin(λ)
-            cosλ = cos(λ)
-            sinσ = sqrt((cosU2 * sinλ) ** 2 + (cosU1 * sinU2 - sinU1 * cosU2 * cosλ) ** 2)
+            sinλ = math.sin(λ)
+            cosλ = math.cos(λ)
+            sinσ = math.sqrt((cosU2 * sinλ) ** 2 + (cosU1 * sinU2 - sinU1 * cosU2 * cosλ) ** 2)
             cosσ = sinU1 * sinU2 + cosU1 * cosU2 * cosλ
-            σ = atan2(sinσ, cosσ)
+            σ = math.atan2(sinσ, cosσ)
             sinα = cosU1 * cosU2 * sinλ / sinσ
             cos2α = 1 - sinα ** 2
             cos2σm = cosσ - 2 * sinU1 * sinU2 / cos2α
@@ -133,19 +132,26 @@ class Gps(object):
         self.gpsdis = b * A * (σ - Δσ)# 距離
 
         # 各点における方位角
-        α1 = atan2(cosU2 * sinλ, cosU1 * sinU2 - sinU1 * cosU2 * cosλ)# 方位角(始点→終点)
-        α2 = atan2(cosU1 * sinλ, -sinU1 * cosU2 + cosU1 * sinU2 * cosλ) + pi# 方位角(終点→始点)
+        α1 = math.atan2(cosU2 * sinλ, cosU1 * sinU2 - sinU1 * cosU2 * cosλ)# 方位角(始点→終点)
+        α2 = math.atan2(cosU1 * sinλ, -sinU1 * cosU2 + cosU1 * sinU2 * cosλ) + math.pi# 方位角(終点→始点)
 
         if α1 < 0:
-            α1 = α1 + pi * 2
+            α1 = α1 + math.pi * 2
 
-        self.gpsdegrees=degrees(α1)
+        self.gpsdegrees=math.degrees(α1)
     """
         return {
             'distance': self.gpsdis,           # 距離
             'azimuth1': degrees(α1), # 方位角(始点→終点)
             'azimuth2': degrees(α2), # 方位角(終点→始点)
         }
+    """
+#g = GPS()
+"""
+GPS = GPS()
+GPS.setupGPS()
+while True:
+    GPS.gpsread()
     """
 #g = GPS()
 """
