@@ -90,6 +90,7 @@ class Cansat(object):
         self.azimuth=[90, 0, 270, 180]
      
         #n点測位用の変数
+        self.measureringTimeLog=list()
         self.measuringcount=0#n点測量目をこの変数で管理
         self.meanCansatRSSI=0
         self.meanLostRSSI=0
@@ -435,23 +436,26 @@ class Cansat(object):
                 
             
     def measuring(self):
-        if self.measureringTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            self.measureringTimeLog[self.measuringcount] = time.time()
+        if self.measureringTimeLog == list():#時刻を取得してLEDをステートに合わせて光らせる
+            self.measureringTimeLog.append(time.time())
             self.RED_LED.led_off()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
             self.rightmotor.stop()
-            self.lefttmotor.stop()
+            self.leftmotor.stop()
+            """
             if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
                 #極座標から直交座標へ変換
                 self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
                 self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
+        """
         else:
             if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
                 #self.switchRadio()#LoRaでログを送信
                 self.LogCansatRSSI += [self.radio.cansat_rssi]
                 self.LogLostRSSI += [self.radio.lost_rssi]
+                #print(self.countSwitchLoop)
                 self.countSwitchLoop+=1
             else:
                 #RSSIの平均取る
@@ -459,8 +463,8 @@ class Cansat(object):
                 self.meanLostRSSI=np.mean(self.LogLostRSSI)
                
                 #距離推定
-                self.distanceCansatRSSI=self.radio.self.estimate_distance_Cansat(self.meanCansatRSSI)
-                self.distanceLostRSSI=self.radio.self.estimate_distance_Lost(self.meanLostRSSI)
+                self.distanceCansatRSSI=self.radio.estimate_distance_Cansat(self.meanCansatRSSI)
+                self.distanceLostRSSI=self.radio.estimate_distance_Lost(self.meanLostRSSI)
                 print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
                 print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
                 self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
