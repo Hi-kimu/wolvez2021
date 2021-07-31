@@ -54,7 +54,7 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 0
+        self.state = 5
         self.laststate = 0
         self.landstate = 0
         
@@ -163,7 +163,7 @@ class Cansat(object):
         self.writeData()#txtファイルへのログの保存
         if not self.state == 1: #preparingのときは電波を発しない
             #self.sendRadio()#LoRaでログを送信
-            #self.switchRadio()
+            self.switchRadio()
             pass
             
     def odometry(self):
