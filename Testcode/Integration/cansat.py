@@ -221,7 +221,7 @@ class Cansat(object):
                       + "finish"
             print(self.meanCansatRSSI)
         '''
-        '''
+        
         self.cansatrssi.append(str(self.radio.cansat_rssi))
         self.lostrssi.append(str(self.radio.lost_rssi))
         
@@ -254,7 +254,7 @@ class Cansat(object):
             self.cansatrssi=list()
             self.lostrssi=list()
 #         ------------------------------------------------------------------------------------------
-    '''
+    
     
     def sendRadio(self):
         datalog = str(self.state) + ","\
