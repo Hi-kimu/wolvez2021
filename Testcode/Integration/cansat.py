@@ -457,6 +457,10 @@ class Cansat(object):
                 #RSSIの平均とって距離計算
                 self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
                 self.meanLostRSSI=np.mean(self.LogLostRSSI)
+                
+                print('カンサット:定義式からの推定'+str(self.estimate_distance_Cansat()))
+                print('ロスト機:定義式からの推定'+str(self.estimate_distance_Lost()))
+                
                 '''
                 self.distanceCansatRSSI=self.radio.----(self.meanCansatRSSI)
                 self.distanceLostRSSI=self.radio.----(self.meanLostRSSI)
