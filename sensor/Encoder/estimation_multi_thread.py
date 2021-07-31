@@ -78,8 +78,6 @@ try:
             time.sleep(DEL_T)
 
 except KeyboardInterrupt:
-    t2=time.time()
-    x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
     print("cansat speed :",cansat_speed,"[m/s]")
     print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
     print("cansat-x :",x,"[m]")
