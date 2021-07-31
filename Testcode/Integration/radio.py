@@ -81,16 +81,19 @@ class radio(object):
                     #print('-------------')
                     break
                     
-     def estimate_distance_cansat(self,meancansatrssi,meanlostrssi)
+     def estimate_distance_Cansat(self,meanCansatRSSI)
                 #定義式より推定
-        N=2.8
-        MP=-42.2
-        cansatestimate_definition=10**((MP-meancansatrssi)/(10*N))
-        lostestimate_definition=10**((MP-meanlostrssi)/(10*N))
-                     self.cansatrssi.insert(2,str(cansatestimate_definition))
-         self.lostrssi.insert(2,str(lostestimate_definition))
-#         print('カンサット:定義式からの推定'+cansatestimate_definition)
-#         print('ロスト機:定義式からの推定'+lostestimate_definition)
+        N_Cansat=2.8
+        MP_Cansat=-42.2
+        10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))
+        
+     def estimate_distance_Lost(self,meanLostRSSI)
+                #定義式より推定
+        N_Lost=2.8
+        MP_Lost=-45.3
+        10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
+        
+  
 
 
         
