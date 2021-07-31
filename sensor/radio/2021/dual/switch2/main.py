@@ -18,8 +18,9 @@ def main(argc, argv):
         print('       [send | recv| swit] ... mode select')
         sys.exit()
 
-    # チャンネル番号を入力
-    channel = input('channel:')
+#     # チャンネル番号を入力
+#      channel = input('channel:')
+    channel=15
 
     # 送信側の場合
     if argv[1] == 'send':
