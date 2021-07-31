@@ -162,6 +162,7 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=871
+        self.iteration=300
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -173,7 +174,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time.append(time.time())
             
-            if len(self.enc_time)==1000:
+            if len(self.enc_time)==self.iteration:
                 for i in range(0,len(self.enc_time)-1):
                     self.enc_del_time.append(0)
                 for i in range(0,len(self.enc_time)-1):
@@ -199,7 +200,7 @@ class estimation():
             if sum==0b0010:
                 self.enc_time2.append(time.time())
             
-            if len(self.enc_time2)==1000:
+            if len(self.enc_time2)==self.iteration:
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2.append(0)
                 for i in range(0,len(self.enc_time2)-1):
@@ -217,6 +218,43 @@ class estimation():
         
         self.cansat_speed = 2*3.14*(0.0665/2)*self.mot_speed + 2*3.14*(0.0665/2)*self.mot_speed2
         self.cansat_rad_speed = (0.0665/0.196)*self.mot_speed - (0.0665/0.196)*self.mot_speed2
+        
+        return self.cansat_speed, self.cansat_rad_speed
+    
+    def est_v_w_for_c(self, gpio_pin1, gpio_pin2):
+        self.mot_speed=0
+        self.mot_speed2=0
+        self.pulse=871
+        self.iteration=300
+        
+        while self.mot_speed==0:
+            self.current_a=GPIO.input(self.pin_a)
+            self.current_b=GPIO.input(self.pin_b)
+            
+            self.encoded=(self.current_a<<1)|self.current_b
+            sum=(self.prev_data<<2)|self.encoded
+        
+            if sum==0b0010:
+                self.enc_time.append(time.time())
+            
+            if len(self.enc_time)==self.iteration:
+                for i in range(0,len(self.enc_time)-1):
+                    self.enc_del_time.append(0)
+                for i in range(0,len(self.enc_time)-1):
+                    self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
+                
+                self.enc_ave_time=np.mean(self.enc_del_time)
+                self.mot_speed=1/(self.pulse*self.enc_ave_time)
+                    
+                #print("motor-revolution/sec",self.mot_speed)
+                self.enc_time=[]
+                self.enc_del_time=[]
+            
+            self.prev_data=self.encoded
+            self.prev_angle = self.angle
+        
+        self.cansat_speed = 2*3.14*(0.0665/2)*self.mot_speed + 2*3.14*(0.0665/2)*0
+        self.cansat_rad_speed = (0.0665/0.196)*self.mot_speed - (0.0665/0.196)*0
         
         return self.cansat_speed, self.cansat_rad_speed
     
