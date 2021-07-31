@@ -163,18 +163,19 @@ class estimation():
         self.mot_speed2=0
         self.pulse=871
         self.iteration=300
-        
+    
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
             self.current_b=GPIO.input(self.pin_b)
             
             self.encoded=(self.current_a<<1)|self.current_b
             sum=(self.prev_data<<2)|self.encoded
-        
+#             print(0)
             if sum==0b0010:
                 self.enc_time.append(time.time())
-            
+#                 print(1)
             if len(self.enc_time)==self.iteration:
+#                 print(2)
                 for i in range(0,len(self.enc_time)-1):
                     self.enc_del_time.append(0)
                 for i in range(0,len(self.enc_time)-1):
@@ -225,7 +226,7 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=871
-        self.iteration=300
+        self.iteration=30
         
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
