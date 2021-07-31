@@ -58,11 +58,11 @@ try:
             print("cansat-y :",y,"[m]")
             print("cansat-q :",q,"[rad]")
             x_remind.append(x)
-            if x[-1]-x[0] >= 6:
+            if abs(x[-1]-x[0]) >= 6:
                 state = 2
         elif state == 2
             print("motor curve") 
-            MotorR.go(81)
+            MotorR.go(60)
             MotorL.go(0)
             t1=time.time()
             cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
@@ -75,7 +75,7 @@ try:
             print("cansat-y :",y,"[m]")
             print("cansat-q :",q,"[rad]")
             q_remind.append(q)
-            if q[-1]-q[0] >=90:
+            if abs(q[-1]-q[0]) >=90:
                 state = 1
 """
 # try:
