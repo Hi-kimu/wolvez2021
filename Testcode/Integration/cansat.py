@@ -454,22 +454,20 @@ class Cansat(object):
                 self.LogLostRSSI += [self.radio.lost_rssi]
                 self.countSwitchLoop+=1
             else:
-                #RSSIの平均とって距離計算
+                #RSSIの平均取る
                 self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
                 self.meanLostRSSI=np.mean(self.LogLostRSSI)
-                
-                print('カンサット:定義式からの推定'+str(self.estimate_distance_Cansat()))
-                print('ロスト機:定義式からの推定'+str(self.estimate_distance_Lost()))
-                
-                '''
-                self.distanceCansatRSSI=self.radio.----(self.meanCansatRSSI)
-                self.distanceLostRSSI=self.radio.----(self.meanLostRSSI)
+               
+                #距離推定
+                self.distanceCansatRSSI=self.radio.self.estimate_distance_Cansat(self.meanCansatRSSI)
+                self.distanceLostRSSI=self.radio.self.estimate_distance_Lost(self.meanLostRSSI)
+                print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
+                print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
                 self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
                 self.n_dis_LogLostRSSI.append(self.distanceLostRSSI)
                 self.meandis=(self.distanceCansatRSSI+self.distanceLostRSSI)/2
-                self.n_meandisLog.append(self.meandis)
+                self.n_meandisLog.append(self.meandis)                
                 
-                '''
                 #n点測量後に使用するデータを格納
                 self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI)]
                 self.n_LogData.append(self.LogData)
