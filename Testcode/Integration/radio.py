@@ -85,13 +85,14 @@ class radio(object):
                 #定義式より推定
         N_Cansat=2.8
         MP_Cansat=-42.2
-        10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))
         
+        return 10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat)
+                    
      def estimate_distance_Lost(self,meanLostRSSI)
                 #定義式より推定
         N_Lost=2.8
         MP_Lost=-45.3
-        10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
+        return 10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
         
   
 
