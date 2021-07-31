@@ -5,7 +5,9 @@
 #bash setup_shutdown.sh
 #./setup_shutdown.sh
 #上記２つのどちらかのコマンドをターミナルに打ち込む
-sudo cat > /home/pi/shutdown.py <<EOF
+mkdir bin/
+
+sudo cat > ./bin/shutdown_button.py <<EOF
 import time
 import RPi.GPIO as GPIO
 import os
@@ -30,26 +32,31 @@ try:
                 break
 EOF
 
-#serviceファイルの作成
-#以下の項目追加
-sudo bash -c "cat >> /lib/systemd/system/shutdown.service" <<EOF
-[Unit]
-Description = shutdown
-
-[Service]
-ExecStart=/usr/bin/python3 /home/pi/shutdown.py
-Restart=always
-Type=simple
-
-[Install]
-WantedBy=multi-user.target
+sudo cat > /etc/rc.local <<EOF
+/home/pi/bin/shutdown_button.py
+exit 0
 EOF
 
+#serviceファイルの作成
+#以下の項目追加
+#sudo bash -c "cat >> /lib/systemd/system/shutdown.service" <<EOF
+#[Unit]
+#Description = shutdown
+
+#[Service]
+#ExecStart=/usr/bin/python3 /home/pi/shutdown.py
+#Restart=always
+#Type=simple
+
+#[Install]
+#WantedBy=multi-user.target
+#EOF
+
 #ラズパイ起動時にサービスを自動起動
-sudo systemctl enable shutdown.service
+#sudo systemctl enable shutdown.service
 
 #実行権限を与える
-sudo chmod +x setup_shutdown.sh
+#sudo chmod +x setup_shutdown.sh
 
 #設定完了の喜びの舞
 echo -e "<<設定完了のおしらせ>>\nおめでとう！設定完了だ！あとでrebootしてね。"
