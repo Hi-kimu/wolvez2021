@@ -6,7 +6,7 @@ import numpy as np
 import datetime
 import os
 import constant as ct
-
+import math
 import motor
 import bno055
 
@@ -27,19 +27,28 @@ def keyboardinterrupt():
     rightmotor.stop()
     leftmotor.stop()
 
-
+def motor_straight():
+    k=20
+    vref=90
+    error=0
+    bno055.bnoread()
+    print(bno055.ex)
+    error=math.sin(0) - math.sin(math.radians(bno055.ex))
+    ke=k*error
+    leftmotor.go(vref+ke)
+    rightmotor.go(vref)
+    return ke
 
 try:
     while True:
-        integ()  
-        
-        bno055.bnoread()
-        print(bno055.ex)
+        e=motor_straight()
+        print('left:',str(90+e),'   ,right:90')
 
         time.sleep(0.05)
      
 except KeyboardInterrupt:
     print('finished')
-    keyboardinterrupt()
+    rightmotor.stop()
+    leftmotor.stop()
     GPIO.cleanup()
     pass
