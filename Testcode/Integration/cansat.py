@@ -388,7 +388,7 @@ class Cansat(object):
                 self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
                 self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
                 
-                for i in range(3):
+                for i in range(4):
                     startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
                 
                 self.close_startpoint=startpointdis.index(min(startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
@@ -413,7 +413,7 @@ class Cansat(object):
                 else:#姿勢が変えらたら直進
                     self.rightmotor.go(100)
                     self.leftmotor.back(100)
-                    self.odometry()
+                    #self.odometry()
                     
                     #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
                     if self.close_startpoint==0 or self.close_startpoint==2:
@@ -523,7 +523,7 @@ class Cansat(object):
                 self.leftmotor.go(80)
                 self.odometry()
             else:
-                if math.sqrt((self.x - self.LogData[self.measuringcount][1])**2 + (self.y - self.LogData[self.measuringcount][2])**2) > ct.count.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
+                if math.sqrt((self.x - self.LogData[self.measuringcount-1][1])**2 + (self.y - self.LogData[self.measuringcount-1][2])**2) > ct.count.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
                         self.lefttmotor.stop()
                         self.state = 5
