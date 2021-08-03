@@ -1,5 +1,5 @@
 import motor
-import estimation
+import estimation_interrupt
 import constant as ct
 import RPi.GPIO as GPIO
 import time
@@ -9,7 +9,7 @@ import threading
 GPIO.setwarnings(False)
 MotorR = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
 MotorL = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
-Encoder = estimation.estimation(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN)
+Encoder = estimation_interrupt.estimation(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN)
 
 
 x=0
@@ -21,14 +21,6 @@ state = 1
 x_remind = []
 y_remind = []
 q_remind = []
-
-# メソッドをスレッドにする
-thread_001 = threading.Thread(target=Encoder.est_right_vel)
-thread_002 = threading.Thread(target=Encoder.est_left_vel)
- 
-# スレッドをスタート
-thread_001.start()
-thread_002.start()
 
 start_time=time.time()
 print("cansat-x :",x,"[m]")
@@ -55,7 +47,8 @@ try:
             print("cansat-q :",q,"[rad]")
             x_remind.append(x)
             y_remind.append(y)
-            if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 2:
+
+            if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 1:
                 print("stop")
                 #state = 2
                 MotorR.stop()

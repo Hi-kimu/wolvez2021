@@ -46,7 +46,7 @@ class estimation():
         self.cansat_rad_speed = 0
 
     def callback_right(self,pin):
-        # print(f"{pin} callback")
+        print("right start")
         current_a=GPIO.input(self.pin_a)
         current_b=GPIO.input(self.pin_b)
         if self.r_itr==-1:
@@ -60,7 +60,7 @@ class estimation():
         elif sum==0b0001:
             self.r_numpulse-=1
         elif sum==0b0011:
-            print("opps! skip pulse")
+            print("right opps! skip pulse")
         
         delta_t = time.time()-self.r_start
         if self.r_itr==ITERATION or delta_t > 0.2:
@@ -68,6 +68,7 @@ class estimation():
             self.r_numpulse=0
             self.r_itr=0
             self.r_start=time.time()
+        print("right end")
 
 
 
@@ -86,7 +87,7 @@ class estimation():
         elif sum==0b0001:
             self.l_numpulse-=1
         elif sum==0b0011:
-            print("opps! skip pulse")
+            print("left opps! skip pulse")
         
         delta_t = time.time()-self.l_start
         if self.l_itr==ITERATION or delta_t > 0.2:

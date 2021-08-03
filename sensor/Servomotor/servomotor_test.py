@@ -9,7 +9,7 @@ servomotor = servomotor.servomotor(25)
 try:
     #while True:
     print("servomotor run")
-    #servomotor.servo_angle(90)#CLOSE
+#     servomotor.servo_angle(90)#CLOSE
     time.sleep(1)
     servomotor.servo_angle(0)#OPEN
     time.sleep(1)    
