@@ -3,7 +3,7 @@
 Keio Wolve'Z cansat2021
 mission function
 Author Hikaru Kimura
-last update:2021/7/30
+last update:2021/8/04
 
 """
 
