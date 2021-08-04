@@ -84,6 +84,7 @@ class Cansat(object):
         self.measureringTime = 0
         self.runningTime = 0
         self.positioningTime = 0
+        self.csvTime = 0
         
         #state管理用変数初期化
         self.countPreLoop = 0
@@ -196,35 +197,36 @@ class Cansat(object):
         '''
         self.cansatrssi.append(str(self.radio.cansat_rssi))
         self.lostrssi.append(str(self.radio.lost_rssi))
-        
-        if self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
+        if self.csvTime == 0:
+            self.csvTime = time.time()
             
-            self.cansatrssi.append(str(self.radio.cansat_rssi))
-            self.lostrssi.append(str(self.radio.lost_rssi))
-            
-                       
-            self.cansatrssi.insert(0,str(np.mean(self.LogCansatRSSI)))
-            self.lostrssi.insert(0, str(np.mean(self.LogLostRSSI)))
-            
-            self.cansatrssi.insert(1,str(np.std(self.LogCansatRSSI)))
-            self.lostrssi.insert(1,str(np.std(self.LogLostRSSI)))
-            
-            
-            
-            position = input("position(m):")
-            self.cansatrssi.insert(0, position + "m")
-            self.lostrssi.insert(0, position + "m")
-            self.cansatrssi.insert(0, "cansat")
-            self.lostrssi.insert(0, "lost")    
-            
-            
-            with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
-                writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
-                writer.writerow(self.cansatrssi) # csvファイルに書き込み
-                writer.writerow(self.lostrssi)  
-            
-            self.cansatrssi=list()
-            self.lostrssi=list()
+        else:
+            if time.time()-self.csvTime > 30:
+                break
+            elif self.countSwitchLoop > ct.const.SWITCH_LOOP_THRE-1:
+                
+                self.cansatrssi.append(str(self.radio.cansat_rssi))
+                self.lostrssi.append(str(self.radio.lost_rssi))
+                                  
+                self.cansatrssi.insert(0,str(np.mean(self.LogCansatRSSI)))
+                self.lostrssi.insert(0, str(np.mean(self.LogLostRSSI)))
+                
+                self.cansatrssi.insert(1,str(np.std(self.LogCansatRSSI)))
+                self.lostrssi.insert(1,str(np.std(self.LogLostRSSI)))                   
+                
+                position = input("position(m):")
+                self.cansatrssi.insert(0, position + "m")
+                self.lostrssi.insert(0, position + "m")
+                self.cansatrssi.insert(0, "cansat")
+                self.lostrssi.insert(0, "lost")    
+                
+                with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
+                    writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
+                    writer.writerow(self.cansatrssi) # csvファイルに書き込み
+                    writer.writerow(self.lostrssi)  
+                
+                self.cansatrssi=list()
+                self.lostrssi=list()
 #         ------------------------------------------------------------------------------------------
     
     
@@ -369,6 +371,8 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         else:
+
+                
             if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
                 #self.switchRadio()#LoRaでログを送信
                 self.LogCansatRSSI += [self.radio.cansat_rssi]
