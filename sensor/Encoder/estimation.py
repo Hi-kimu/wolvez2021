@@ -112,9 +112,12 @@ class estimation():
     def callback2(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
+        self.pulse=898
         self.keisan = 1
         self.keisan2 = 1
         self.hantei = 0
+        self.kaiten1=0
+        self.kaiten2=0
         
         while self.keisan<=5:
             self.current_a=GPIO.input(self.pin_a)
@@ -125,8 +128,12 @@ class estimation():
         
             if sum==0b0010:
                 self.enc_time.append(time.time())
+                self.kaiten1=1
+            elif sum==0b1000:
+                self.enc_time.append(time.time())
+                self.kaiten1=2
             
-            if len(self.enc_time)==871:
+            if len(self.enc_time)==self.pulse:
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time=[]
                 self.keisan = self.keisan + 1
@@ -144,8 +151,12 @@ class estimation():
         
             if sum==0b0010:
                 self.enc_time2.append(time.time())
+                self.kaiten2=1
+            elif sum==0b1000:
+                self.enc_time2.append(time.time())
+                self.kaiten2=2
             
-            if len(self.enc_time2)==871:
+            if len(self.enc_time2)==self.pulse:
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time2=[]
                 self.keisan2 = self.keisan2 + 1
@@ -161,8 +172,10 @@ class estimation():
     def est_v_w(self, gpio_pin1, gpio_pin2):
         self.mot_speed=0
         self.mot_speed2=0
-        self.pulse=871
+        self.pulse=898
         self.iteration=300
+        self.kaiten1=0
+        self.kaiten2=0
     
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -173,6 +186,10 @@ class estimation():
 #             print(0)
             if sum==0b0010:
                 self.enc_time.append(time.time())
+                self.kaiten1=1
+            elif sum==0b1000:
+                self.enc_time.append(time.time())
+                self.kaiten1=2
 #                 print(1)
             if len(self.enc_time)==self.iteration:
 #                 print(2)
@@ -182,7 +199,10 @@ class estimation():
                     self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
                 
                 self.enc_ave_time=np.mean(self.enc_del_time)
-                self.mot_speed=1/(self.pulse*self.enc_ave_time)
+                if self.kaiten1==1:
+                    self.mot_speed=1/(self.pulse*self.enc_ave_time)
+                elif self.kaiten1==2:
+                    self.mot_speed=-1/(self.pulse*self.enc_ave_time)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time=[]
@@ -200,7 +220,10 @@ class estimation():
         
             if sum==0b0010:
                 self.enc_time2.append(time.time())
-            
+                self.kaiten2=1
+            elif sum==0b1000:
+                self.enc_time2.append(time.time())
+                self.kaiten2=2
             if len(self.enc_time2)==self.iteration:
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2.append(0)
@@ -208,7 +231,10 @@ class estimation():
                     self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
                 
                 self.enc_ave_time2=np.mean(self.enc_del_time2)
-                self.mot_speed2=1/(self.pulse*self.enc_ave_time2)
+                if self.kaiten2==1:
+                    self.mot_speed2=1/(self.pulse*self.enc_ave_time2)
+                elif self.kaiten2==2:
+                    self.mot_speed2=-1/(self.pulse*self.enc_ave_time2)
                     
                 #print("motor-revolution/sec",self.mot_speed)
                 self.enc_time2=[]
