@@ -1,0 +1,1 @@
+cmd_/home/pi/Desktop/nakamura/LoRa_SOFT/Module.symvers := sed 's/ko$$/o/' /home/pi/Desktop/nakamura/LoRa_SOFT/modules.order | scripts/mod/modpost -m -a   -o /home/pi/Desktop/nakamura/LoRa_SOFT/Module.symvers -e -i Module.symvers   -T -

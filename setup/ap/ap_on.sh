@@ -1,12 +1,11 @@
 #AP化ON(２回目以降)　参考→http://norikyu.blogspot.com/p/raspberry-pi3-lan-ap.html
 #<<実行方法>>
 #sudo bash ap_on.sh
-
 #ファイル編集(3つ)
 #1./etc/create_ap.conf
 sudo cat > /etc/create_ap.conf <<EOF
 CHANNEL=default
-GATEWAY=10.0.0.3
+GATEWAY=10.0.0.6
 WPA_VERSION=2
 ETC_HOSTS=0
 DHCP_DNS=gateway
@@ -30,8 +29,8 @@ DAEMONIZE=0
 NO_HAVEGED=0
 WIFI_IFACE=wlan0
 INTERNET_IFACE=lo
-SSID=wolvez2020
-PASSPHRASE=wolvez2020
+SSID=wolvez2021_6
+PASSPHRASE=wolvez2021
 USE_PSK=0
 EOF
 #ssidとpassphraseは好きなもの!
