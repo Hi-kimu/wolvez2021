@@ -31,12 +31,14 @@ class LoraSwitClass:
                         print(line)
                         if line.find('RSSI') >= 0 and line.find('information') == -1:
                             log = line
-                            log_list = log.split('):Receive Data(')
+#                             log_list = log.split('):Receive Data(')
+                            log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
                             # 受信電波強度
-                            rssi = log_list[0][5:]
+                            rssi = float(log_list[0][5:])
                             print(rssi)
                             # 受信フレーム
-                            data = log_list[1][:-3]
+#                             data = log_list[1][:-3]
+                            data = float(log_list[1][0:-32])
                             print(data)
                             time.sleep(1)
                             #senddata
