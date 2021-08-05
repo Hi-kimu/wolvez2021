@@ -10,6 +10,9 @@ try:
     print("motor run") 
     Motor1.go(85)
     Motor2.go(85)
+ #   Motor1.back(85)
+#   Motor2.back(85)
+
     time.sleep(20)
 
     #Motor.back(100)
