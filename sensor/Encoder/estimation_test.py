@@ -37,9 +37,11 @@ print("cansat-q :",q,"[rad]")
 #     print("motor run")
 #     MotorR.stop()
 #     MotorL.stop()
-    
-#     MotorR.go(81)
-#     MotorL.go(80)
+#     
+# #     MotorR.go(81)
+# #     MotorL.go(80)
+#     MotorR.back(60)
+#     MotorL.go(60)
 #     
 #     while True:
 #         t1=time.time()
@@ -82,8 +84,8 @@ try:
             x_remind=[]
             y_remind = []
 #             print("motor curve") 
-            MotorR.go(30)
-            MotorL.go(0)
+            MotorR.back(60)
+            MotorL.go(60)
             t1=time.time()
             cansat_speed,cansat_rad_speed=Encoder.est_v_w_for_c(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
             t2=time.time()
@@ -101,7 +103,7 @@ try:
             if sin((abs(q_remind[-1]-q_remind[0])))>=0.9:
                 state = 1
                 """
-            if fabs(q-270)<1:
+            if fabs(q-90)<3:
                 state=1
         elif state == 3:
             MotorR.go(81)
@@ -110,7 +112,7 @@ try:
 
 # try:
 #     print("motor run") 
-#     MotorR.go(82)
+#     MotorR.back(80)
 #     MotorL.go(80)
 #     
 #     while hantei == 0:
