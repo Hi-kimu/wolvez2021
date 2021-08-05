@@ -54,13 +54,21 @@ class Cansat(object):
         self.v_left = 100
         
         #変数
-        self.state = 0
+        self.state = 5
         self.laststate = 0
         self.landstate = 0
+        self.k = 20
+        self.v_ref = 90
         
         #スタート地点移動用の緯度経度
-        self.startlon=139.654
-        self.startlat=35.555
+        #cansatGPS
+        self.startlon=139.65603167
+        self.startlat=35.55505667
+        
+        #google map
+        #self.startlon=139.6559749
+        #self.startlat=35.5549795
+        
         self.realshadow=[[0,0],#永久影の設定15×15
                          [0,ct.const.SHADOW_EDGE_LENGTH],
                          [ct.const.SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH],
@@ -79,6 +87,7 @@ class Cansat(object):
                               [-10,-5]]
         self.close_startpoint=-1
         self.starttheta=0
+        self.startpointdis=list()
         self.anglestate=0
         
         #オドメトリ用の変数
@@ -160,12 +169,13 @@ class Cansat(object):
         self.timer = int(self.timer)
         self.gps.gpsread()
         self.bno055.bnoread()
-        
         self.writeData()#txtファイルへのログの保存
+    
         if not self.state == 1: #preparingのときは電波を発しない
-            #self.sendRadio()#LoRaでログを送信
-            #self.switchRadio()
-            pass
+            if not self.state ==5:#self.sendRadio()#LoRaでログを送信
+                self.sendRadio()
+            else:
+                self.switchRadio()
             
     def odometry(self):
         self.t1=time.time()
@@ -379,42 +389,40 @@ class Cansat(object):
             self.RED_LED.led_on()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_on()
-            startpointdis=list()
+            self.startpointdis=list()
         else:#4つのスタート地点から一番近い点へ移動
             #原点と着陸地点の距離と方位角を取得
             if self.startstate==0:
                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
                 #極座標から直交座標へ変換
-                self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
-                self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
+                self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
                 
-                for i in range(3):
+            self.startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
+
+                for i in range(4):
                     startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
                 
-                self.close_startpoint=startpointdis.index(min(startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
+                self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
                 self.starttheta=math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y,self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
                 self.startstate=1
             else:
-                if math.fabs(self.gx - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                    self.rightmotor.go(60)
-                    self.leftmotor.back(60)
-                    '''
-                    self.anglestate+=1
-                    if self.anglestate < ct.const.ANGLE_COUNT_THRE:
-                        self.rightmotor.go(60)
-                        self.leftmotor.back(60)
-                        
-                    else:
-                        self.rightmotor.stop()
-                        self.lefttmotor.stop()
-                        if self.anglestate > ct.const.ANGLE_COUNT_THRE+10:
-                            self.anglestate=0
-                           ''' 
+                print("startpoint is "+ str(self.close_startpoint))
+                if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
+                    print(self.gps.gpsdegrees)
+                    print("(x,y)"+str(self.x)+","+str(self.y))
+#                     print("angle:"+str(self.starttheta))
+#                     print("angle error:"+ str(math.fabs(self.ex - self.starttheta)))
+                    self.rightmotor.back(30)
+                    self.leftmotor.go(30)
+                   
                 else:#姿勢が変えらたら直進
-                    self.rightmotor.go(100)
-                    self.leftmotor.back(100)
+
+                    self.rightmotor.go(self.v_ref)
+                    self.leftmotor.go(self.v_ref)
                     self.odometry()
-                    
+                
                     #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
                     if self.close_startpoint==0 or self.close_startpoint==2:
                         if  self.startshadowTHRE[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE[self.close_startpoint][1]:
@@ -436,6 +444,7 @@ class Cansat(object):
                 
             
     def measuring(self):
+        print("measuring count is "+str(self.measuringcount))
         if self.measureringTimeLog == list():#時刻を取得してLEDをステートに合わせて光らせる
             self.measureringTimeLog.append(time.time())
             self.RED_LED.led_off()
@@ -447,14 +456,14 @@ class Cansat(object):
             if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
                 #極座標から直交座標へ変換
-                self.x = self.gps.gpsdegrees*math.cos(math.radians(self.gps.gpsdis))
-                self.y = self.gps.gpsdegrees*math.sin(math.radians(self.gps.gpsdis))
-        
+                self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+                
         else:
             if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
                 #self.switchRadio()#LoRaでログを送信
-                self.LogCansatRSSI += [self.radio.cansat_rssi]
-                self.LogLostRSSI += [self.radio.lost_rssi]
+                self.LogCansatRSSI.append([self.radio.cansat_rssi])
+                self.LogLostRSSI.append([self.radio.lost_rssi])
                 #print(self.countSwitchLoop)
                 self.countSwitchLoop+=1
             else:
@@ -508,35 +517,60 @@ class Cansat(object):
         else:#永久影に入っちゃっている場合
             self.case=4
     
+    def motor_run(self):
+        if self.case==1:        
+            error=math.sin(math.radians(self.azimuth[self.case])) - math.sin(math.radians(self.bno055.ex))
+            ke=self.k*error
+
+            self.leftmotor.go(self.v_ref+ke)
+            self.rightmotor.go(self.v_ref)
+
+        elif self.case==2:
+            error=math.cos(math.radians(self.azimuth[self.case])) - math.cos(math.radians(self.bno055.ex))
+            ke=self.k*error
+            self.leftmotor.go(self.v_ref+ke)
+            self.rightmotor.go(self.v_ref)
+        
+        elif self.case==3:
+            error=math.sin(math.radians(self.azimuth[self.case])) - math.sin(math.radians(self.bno055.ex))
+            ke=self.k*error
+            self.leftmotor.go(self.v_ref)
+            self.rightmotor.go(self.v_ref+ke)
+         
+        elif self.case==0:
+            error=math.cos(math.radians(self.azimuth[self.case])) - math.cos(math.radians(self.bno055.ex))
+            ke=self.k*error
+            self.leftmotor.go(self.v_ref)
+            self.rightmotor.go(self.v_ref+ke)
     
     def running(self):
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+            
             self.runningTime = time.time()
             self.RED_LED.led_on()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
         
-        else:#Case判定
+        else:#Case判定  
             self.caseDiscrimination()#Case判定
+            print("case is "+str(self.case))
+            print("(x,y)"+str(self.x)+","+str(self.y))
+            
             if self.case == 4:#永久影からの脱出
+                
                 self.rightmotor.go(60)
                 self.leftmotor.go(80)
                 self.odometry()
             else:
-                if math.sqrt((self.x - self.LogData[self.measuringcount][1])**2 + (self.y - self.LogData[self.measuringcount][2])**2) > ct.count.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
+
+                if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
-                        self.lefttmotor.stop()
+                        self.leftmotor.stop()
                         self.state = 5
                         self.laststate = 5
                 else:
-                    if math.fabs(self.q - self.azimuth[self.case]) > ct.const.ANGLE_THRE:#姿勢を変更
-                        self.rightmotor.go(60)
-                        self.leftmotor.back(60)
-                        self.odometry()
-                    else:#姿勢を変えたら直進
-                        self.rightmotor.go(100)
-                        self.leftmotor.go(100)
-                        self.odometry()
+                    self.motor_run()
+                    self.odometry()
                         
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -547,7 +581,7 @@ class Cansat(object):
             self.rightmotor.stop()
             self.leftmotor.stop()
         else:
-            if self.positioning_count == self.self.measuringcount:
+            if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
                 self.graph(self.n_pdf_sum)
                 self.state = 8
@@ -571,6 +605,7 @@ class Cansat(object):
              
     def graph(self,Z):
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
+        print("Zc:" + str(Zc))
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_xlabel("x")

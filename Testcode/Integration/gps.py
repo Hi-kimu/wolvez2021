@@ -47,6 +47,8 @@ class GPS(object):
              #print('経度：', self.Lon)
         #time.sleep(1.0) #ここ変える
     def vincenty_inverse(self,lat1, lon1, lat2, lon2):
+        lat2=float(lat2)
+        lon2=float(lon2)
         ellipsoid=None
         # 楕円体
         ELLIPSOID_GRS80 = 1 # GRS80
