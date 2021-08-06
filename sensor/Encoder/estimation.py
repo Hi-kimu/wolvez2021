@@ -338,43 +338,51 @@ class estimation():
         self.count2=10
         self.thread1=thread1
         self.thread2=thread2
+        if len(self.thread1)==self.iteration:
+            self.update1=1
+        else:
+            self.update1=0
+        if len(self.thread2)==self.iteration:
+            self.update2=1
+        else:
+            self.update2=0
     
         while self.mot_speed==0:
-            if len(self.thread1)==self.iteration:
-                for i in range(1, self.count1+1):
-                    self.thread1.del(0)
-                for i in range(1, self.count1+1):
-                    self.current_a=GPIO.input(self.pin_a)
-                    self.current_b=GPIO.input(self.pin_b)
+            if self.update1==1:
+                self.thread1.del(0)
 
-                    self.encoded=(self.current_a<<1)|self.current_b
-                    sum=(self.prev_data<<2)|self.encoded
+                self.current_a=GPIO.input(self.pin_a)
+                self.current_b=GPIO.input(self.pin_b)
 
-                    if sum==0b0010:
-                        self.enc_time.append(time.time())
-                        self.kaiten1=1
-                    elif sum==0b1000:
-                        self.enc_time.append(time.time())
-                        self.kaiten1=2
-                        
-                for i in range(0,len(self.enc_time)-1):
-                    self.enc_del_time.append(0)
-                for i in range(0,len(self.enc_time)-1):
-                    self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
-                self.enc_ave_time=np.mean(self.enc_del_time)
-                self.thread1_ave_time=np.mean(self.thread1)
-                
-                self.enc_ave_time=(len(self.enc_del_time)*self.enc_ave_time + len(self.thread1)*self.thread1_ave_time)/(len(self.enc_del_time)+len(self.thread1))
-                
-                if self.kaiten1==1:
-                    self.mot_speed=1/(self.pulse*self.enc_ave_time)
-                elif self.kaiten1==2:
-                    self.mot_speed=-1/(self.pulse*self.enc_ave_time)
-                
-                self.thread1=self.enc_del_time
-                self.enc_time=[]
-                self.enc_del_time=[]
-                
+                self.encoded=(self.current_a<<1)|self.current_b
+                sum=(self.prev_data<<2)|self.encoded
+
+                if sum==0b0010:
+                    self.enc_time.append(time.time())
+                    self.kaiten1=1
+                elif sum==0b1000:
+                    self.enc_time.append(time.time())
+                    self.kaiten1=2
+                    
+                if len(self.enc_time)==self.count1:
+                    for i in range(0,len(self.enc_time)-1):
+                        self.enc_del_time.append(0)
+                    for i in range(0,len(self.enc_time)-1):
+                        self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
+                    self.enc_ave_time=np.mean(self.enc_del_time)
+                    self.thread1_ave_time=np.mean(self.thread1)
+
+                    self.enc_ave_time=(len(self.enc_del_time)*self.enc_ave_time + len(self.thread1)*self.thread1_ave_time)/(len(self.enc_del_time)+len(self.thread1))
+
+                    if self.kaiten1==1:
+                        self.mot_speed=1/(self.pulse*self.enc_ave_time)
+                    elif self.kaiten1==2:
+                        self.mot_speed=-1/(self.pulse*self.enc_ave_time)
+
+                    self.thread1=self.enc_del_time
+                    self.enc_time=[]
+                    self.enc_del_time=[]
+
             else:
                 self.current_a=GPIO.input(self.pin_a)
                 self.current_b=GPIO.input(self.pin_b)
@@ -407,39 +415,41 @@ class estimation():
             self.prev_data=self.encoded
             self.prev_angle = self.angle
         
-        if len(self.thread2)==self.iteration:
-                for i in range(1, self.count2+1):
-                    self.thread2.del(0)
-                for i in range(1, self.count2+1):
-                    self.current_c=GPIO.input(self.pin_c)
-                    self.current_d=GPIO.input(self.pin_d)
+        while self.mot_speed2==0:
+            if self.update2==1:
+                self.thread2.del(0)
 
-                    self.encoded2=(self.current_c<<1)|self.current_d
-                    sum=(self.prev_data2<<2)|self.encoded2
+                self.current_c=GPIO.input(self.pin_c)
+                self.current_d=GPIO.input(self.pin_d)
 
-                    if sum==0b0010:
-                        self.enc_time2.append(time.time())
-                        self.kaiten2=1
-                    elif sum==0b1000:
-                        self.enc_time2.append(time.time())
-                        self.kaiten2=2
-                for i in range(0,len(self.enc_time2)-1):
-                    self.enc_del_time2.append(0)
-                for i in range(0,len(self.enc_time2)-1):
-                    self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
-                self.enc_ave_time2=np.mean(self.enc_del_time2)
-                self.thread2_ave_time=np.mean(self.thread2)
-                
-                self.enc_ave_time2=(len(self.enc_del_time2)*self.enc_ave_time2 + len(self.thread2)*self.thread2_ave_time)/(len(self.enc_del_time2)+len(self.thread2))
-                
-                if self.kaiten2==1:
-                    self.mot_speed2=1/(self.pulse*self.enc_ave_time2)
-                elif self.kaiten2==2:
-                    self.mot_speed2=-1/(self.pulse*self.enc_ave_time2)
-                
-                self.thread2=self.enc_del_time2
-                self.enc_time2=[]
-                self.enc_del_time2=[]
+                self.encoded2=(self.current_c<<1)|self.current_d
+                sum=(self.prev_data2<<2)|self.encoded2
+
+                if sum==0b0010:
+                    self.enc_time2.append(time.time())
+                    self.kaiten2=1
+                elif sum==0b1000:
+                    self.enc_time2.append(time.time())
+                    self.kaiten2=2
+                    
+                if len(self.enc_time2)==self.count2:
+                    for i in range(0,len(self.enc_time2)-1):
+                        self.enc_del_time2.append(0)
+                    for i in range(0,len(self.enc_time2)-1):
+                        self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
+                    self.enc_ave_time2=np.mean(self.enc_del_time2)
+                    self.thread2_ave_time=np.mean(self.thread2)
+
+                    self.enc_ave_time2=(len(self.enc_del_time2)*self.enc_ave_time2 + len(self.thread2)*self.thread2_ave_time)/(len(self.enc_del_time2)+len(self.thread2))
+
+                    if self.kaiten2==1:
+                        self.mot_speed2=1/(self.pulse*self.enc_ave_time2)
+                    elif self.kaiten2==2:
+                        self.mot_speed2=-1/(self.pulse*self.enc_ave_time2)
+
+                    self.thread2=self.enc_del_time2
+                    self.enc_time2=[]
+                    self.enc_del_time2=[]
                 
             else:
                 self.current_c=GPIO.input(self.pin_c)
