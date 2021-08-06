@@ -182,6 +182,7 @@ class Cansat(object):
         self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
         self.t2=time.time()
         self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
+        self.q=self.ex #加速度センサの値を姿勢角に使用
 
     def integ(self):#センサ統合用
         self.rightmotor.go(60)
