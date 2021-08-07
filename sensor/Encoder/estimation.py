@@ -175,7 +175,7 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=898
-        self.iteration=300
+        self.iteration=500
         self.kaiten1=0
         self.kaiten2=0
     
@@ -189,9 +189,9 @@ class estimation():
             if sum==0b0010:
                 self.enc_time.append(time.time())
                 self.kaiten1=1
-            elif sum==0b1000:
-                self.enc_time.append(time.time())
-                self.kaiten1=2
+#             elif sum==0b1000:
+#                 self.enc_time.append(time.time())
+#                 self.kaiten1=2
 
             if len(self.enc_time)==self.iteration:
 
@@ -222,9 +222,9 @@ class estimation():
             if sum==0b0010:
                 self.enc_time2.append(time.time())
                 self.kaiten2=1
-            elif sum==0b1000:
-                self.enc_time2.append(time.time())
-                self.kaiten2=2
+#             elif sum==0b1000:
+#                 self.enc_time2.append(time.time())
+#                 self.kaiten2=2
             if len(self.enc_time2)==self.iteration:
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2.append(0)
@@ -331,7 +331,7 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=898
-        self.iteration=500
+        self.iteration=1000
         self.kaiten1=0
         self.kaiten2=0
         self.count1=10
@@ -360,9 +360,9 @@ class estimation():
                 if sum==0b0010:
                     self.enc_time.append(time.time())
                     self.kaiten1=1
-                elif sum==0b1000:
-                    self.enc_time.append(time.time())
-                    self.kaiten1=2
+#                 elif sum==0b1000:
+#                     self.enc_time.append(time.time())
+#                     self.kaiten1=2
                     
                 if len(self.enc_time)==self.count1:
                     for i in range(0,len(self.enc_time)-1):
@@ -393,9 +393,9 @@ class estimation():
                 if sum==0b0010:
                     self.enc_time.append(time.time())
                     self.kaiten1=1
-                elif sum==0b1000:
-                    self.enc_time.append(time.time())
-                    self.kaiten1=2
+#                 elif sum==0b1000:
+#                     self.enc_time.append(time.time())
+#                     self.kaiten1=2
                     
                 if len(self.enc_time)==self.iteration:
                     for i in range(0,len(self.enc_time)-1):
@@ -428,9 +428,9 @@ class estimation():
                 if sum==0b0010:
                     self.enc_time2.append(time.time())
                     self.kaiten2=1
-                elif sum==0b1000:
-                    self.enc_time2.append(time.time())
-                    self.kaiten2=2
+#                 elif sum==0b1000:
+#                     self.enc_time2.append(time.time())
+#                     self.kaiten2=2
                     
                 if len(self.enc_time2)==self.count2:
                     for i in range(0,len(self.enc_time2)-1):
@@ -461,9 +461,9 @@ class estimation():
                 if sum==0b0010:
                     self.enc_time2.append(time.time())
                     self.kaiten2=1
-                elif sum==0b1000:
-                    self.enc_time2.append(time.time())
-                    self.kaiten2=2
+#                 elif sum==0b1000:
+#                     self.enc_time2.append(time.time())
+#                     self.kaiten2=2
                 if len(self.enc_time2)==self.iteration:
                     for i in range(0,len(self.enc_time2)-1):
                         self.enc_del_time2.append(0)
@@ -507,9 +507,9 @@ class estimation():
             if sum==0b0010:
                 self.enc_time.append(time.time())
                 self.kaiten1=1
-            elif sum==0b1000:
-                self.enc_time.append(time.time())
-                self.kaiten1=2
+#             elif sum==0b1000:
+#                 self.enc_time.append(time.time())
+#                 self.kaiten1=2
 
 #                 print(1)
             if len(self.enc_time)==self.iteration:
@@ -542,9 +542,9 @@ class estimation():
             if sum==0b0010:
                 self.enc_time2.append(time.time())
                 self.kaiten2=1
-            elif sum==0b1000:
-                self.enc_time2.append(time.time())
-                self.kaiten2=2
+#             elif sum==0b1000:
+#                 self.enc_time2.append(time.time())
+#                 self.kaiten2=2
             if len(self.enc_time2)==self.iteration:
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2.append(0)
