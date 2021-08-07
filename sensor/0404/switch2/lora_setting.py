@@ -16,7 +16,6 @@ class LoraSettingClass:
         self.cmd = None
         self.reset_pin = 11
         self.set_mode = None
-      
 
     # LoRaに対して命令コマンドを入力する
     def cmd_lora(self, cmd=''):

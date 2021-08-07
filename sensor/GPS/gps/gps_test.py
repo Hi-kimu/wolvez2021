@@ -3,7 +3,7 @@ import gps
 
 class cansat(object):
     def __init__(self):
-        self.gps = gps.Gps()
+        self.gps = gps.GPS()
 
     def setup(self):
         self.gps.setupGps()

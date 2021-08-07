@@ -22,4 +22,6 @@ except KeyboardInterrupt:
     print('finished')
     can.keyboardinterrupt()
     GPIO.cleanup()
+    can.rightmotor.stop()
+    can.leftmotor.stop()
     pass
