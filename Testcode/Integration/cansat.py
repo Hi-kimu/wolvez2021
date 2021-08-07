@@ -60,10 +60,15 @@ class Cansat(object):
         self.k = 20
         self.v_ref = 90
         
+        #基準点のGPS情報を取得
+        self.gpscount=0
+        self.startgps_lon=list()
+        self.startgps_lat=list()
+        
         #スタート地点移動用の緯度経度
         #cansatGPS
-        self.startlon=139.65603167
-        self.startlat=35.55505667
+        #self.startlon=139.65603167
+        #self.startlat=35.55505667
         
         #google map
         #self.startlon=139.6559749
@@ -317,7 +322,14 @@ class Cansat(object):
             self.leftmotor.stop()
         #self.countPreLoop+ = 1
         if not self.preparingTime == 0:
+            if self.gpscount <= ct.const.GPS_COUNT_THRE:
+                self.startgps_lon.apend(self.gps.Lon)
+                self.startgps_lat.apend(self.gps.Lat)
+                self.gpscount+=1
+            
             if time.time() - self.preparingTime > ct.const.PREPARING_TIME_THRE:
+                self.startlon=np.mean(self.startgps_lon)
+                self.startlat=np.mean(self.startgps_lat)
                 self.state = 1
                 self.laststate = 1
     
