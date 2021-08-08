@@ -39,7 +39,7 @@ class motor():
         GPIO.output(self.pin1,GPIO.LOW)
         GPIO.output(self.pin2,GPIO.HIGH)
         self.pwm.start(v)
-        print(v)
+        #print(v)
         
 #回転ストップ
     def stop(self):
