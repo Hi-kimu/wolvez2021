@@ -33,7 +33,7 @@ class GPS(object):
 
     def gpsread(self):
         #while True:
-        if self.mgps.clean_sentences > 20: # ちゃんとしたデーターがある程度たまったら出力する
+        if self.mgps.clean_sentences > 2: # ちゃんとしたデーターがある程度たまったら出力する
              h = str('%02d' % (self.mgps.timestamp[0])) if self.mgps.timestamp[0] < 24 else self.mgps.timestamp[0] - 24
              m = str('%02d' % (self.mgps.timestamp[1]))
              s = str('%02d' % (self.mgps.timestamp[2]))
@@ -47,6 +47,8 @@ class GPS(object):
              #print('経度：', self.Lon)
         #time.sleep(1.0) #ここ変える
     def vincenty_inverse(self,lat1, lon1, lat2, lon2):
+        lat2=float(lat2)
+        lon2=float(lon2)
         ellipsoid=None
         # 楕円体
         ELLIPSOID_GRS80 = 1 # GRS80
