@@ -50,10 +50,12 @@ class radio(object):
     
     def switchData(self, datalog):
         self.sendDevice.cmd_lora(datalog)
+        
+        measuringtime=time.time()
         while True:
-#             print(1000)
+
             if self.sendDevice.device.inWaiting() > 0:
-#                 print(2000)
+
                 line = self.sendDevice.device.readline()
                 line = line.decode("utf-8")
                 print(line)
@@ -61,7 +63,7 @@ class radio(object):
                 #print('wait lost...')
                 
                 if line.find('RSSI') >= 0 and line.find('information') == -1:
-#                     print(3000)
+
                    # print(line)
                     log = line
                     ##log_list = log.split('):Receive Data(')
@@ -82,7 +84,10 @@ class radio(object):
                     #print('Receive'+ data)
                     #print('-------------')
                     break
-
+            elif time.time()-measuringtime>5:
+                print('返信なし')
+                break
+            
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 
         N_Cansat=2.933
