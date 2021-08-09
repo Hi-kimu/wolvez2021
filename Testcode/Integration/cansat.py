@@ -465,6 +465,7 @@ class Cansat(object):
             self.GREEN_LED.led_on()
             self.rightmotor.stop()
             self.leftmotor.stop()
+            measuringTime=time.time()
             
             if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
@@ -479,7 +480,7 @@ class Cansat(object):
                 self.LogLostRSSI.append([self.radio.lost_rssi])
                 #print(self.countSwitchLoop)
                 self.countSwitchLoop+=1
-            else:
+            elif time.time()-measuringTime > 5* 
                 #RSSIの平均取る
                 self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
                 self.meanLostRSSI=np.mean(self.LogLostRSSI)
