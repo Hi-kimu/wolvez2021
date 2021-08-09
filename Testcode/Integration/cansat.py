@@ -625,6 +625,8 @@ class Cansat(object):
         return 0.5*np.exp(-((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*r**2))*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*math.pi*r**2)       
              
     def graph(self,Z):
+        x = np.arange(-30, 31, 1)
+        y = np.arange(-30, 31, 1)
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
         print("Zc:" + str(Zc))
         fig = plt.figure()
