@@ -220,6 +220,18 @@ class Cansat(object):
         self.ez=round(self.bno055.ez,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
+        print_datalog = = str(self.timer) + ","\
+                  + str(self.state) + ","\
+                  + str(self.gps.Time) + ","\
+                  + str(self.gps.Lat).rjust(6) + ","\
+                  + str(self.gps.Lon).rjust(6) + ","\
+                  + "rV:" + str(self.rightmotor.velocity).rjust(6) + ","\
+                  + "lV:" + str(self.leftmotor.velocity).rjust(6) + ","\
+                  + "x:" + str(round(self.x,2)).rjust(6) + ","\
+                  + "y:" + str(round(self.y,2)).rjust(6) + ","\
+                  + "q:" + str(self.ex).rjust(6) 
+        print(print_datalog)
+        
         datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
                   + str(self.gps.Time) + ","\
@@ -230,12 +242,11 @@ class Cansat(object):
                   + str(self.Az).rjust(6) + ","\
                   + str(self.rightmotor.velocity).rjust(6) + ","\
                   + str(self.leftmotor.velocity).rjust(6) + ","\
-                  + str(round(self.encoder.cansat_speed,2)).rjust(6) + ","\
-                  + str(round(self.encoder.cansat_rad_speed,2)).rjust(6) + ","\
-                  + str(round(self.x,2)).rjust(6) + ","\
-                  + str(round(self.y,2)).rjust(6) + ","\
-                  + str(self.q).rjust(6) 
-        print(datalog)
+                  + str(self.encoder.cansat_speed).rjust(6) + ","\
+                  + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
+                  + str(self.x).rjust(6) + ","\
+                  + str(self.y).rjust(6) + ","\
+                  + str(self.ex).rjust(6) 
         
         with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
@@ -314,7 +325,7 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_off()
             self.rightmotor.stop()
-            self.leftmotor.stop()
+            self.leftmotor.stop()(pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2))
                 
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
@@ -412,8 +423,7 @@ class Cansat(object):
                                 error += 360
                             elif error > 180:
                                 error -= 360
-                            print(self.gps.gpsdegrees)
-                            print("(x,y)"+str(self.x)+","+str(self.y))
+                    
                             if error > 0:
                                 self.rightmotor.go(ke)
                                 self.lefttmotor.back(ke)
@@ -436,10 +446,6 @@ class Cansat(object):
                         
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                            print(self.gps.gpsdegrees)
-                            print("(x,y)"+str(self.x)+","+str(self.y))
-        #                     print("angle:"+str(self.starttheta))
-        #                     print("angle error:"+ str(math.fabs(self.ex - self.starttheta)))
                             self.rightmotor.back(30)
                             self.leftmotor.go(50)
                            
@@ -450,10 +456,6 @@ class Cansat(object):
                             self.odometry()
                         
                 if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                    print(self.gps.gpsdegrees)
-                    print("(x,y)"+str(self.x)+","+str(self.y))
-#                     print("angle:"+str(self.starttheta))
-#                     print("angle error:"+ str(math.fabs(self.ex - self.starttheta)))
                     self.rightmotor.back(30)
                     self.leftmotor.go(30)
                    
@@ -485,8 +487,6 @@ class Cansat(object):
                 #極座標から直交座標へ変換
                 self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
                 self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
-                print("(x,y)"+str(self.x)+","+str(self.y))
-                
                 
         else:
             if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
@@ -498,7 +498,6 @@ class Cansat(object):
                 else:
                     self.LogCansatRSSI.append([self.radio.cansat_rssi])
                     self.LogLostRSSI.append([self.radio.lost_rssi])
-                    #print(self.countSwitchLoop)
                     self.countSwitchLoop+=1
             else:
                 #RSSIの平均取る
@@ -588,7 +587,6 @@ class Cansat(object):
         else:#Case判定  
             self.caseDiscrimination()#Case判定
             print("case is "+str(self.case))
-            print("(x,y)"+str(self.x)+","+str(self.y))
             
             if self.case == 4:#永久影からの脱出
                 
@@ -641,7 +639,7 @@ class Cansat(object):
         x = np.arange(-30, 31, 1)
         y = np.arange(-30, 31, 1)
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
-        print("Zc:" + str(Zc))
+        print("Estimation Result:" + str(Zc))
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_xlabel("x")
