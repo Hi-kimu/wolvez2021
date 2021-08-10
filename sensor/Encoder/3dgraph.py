@@ -19,12 +19,12 @@ def pdf(xc,yc,r):
 x = np.arange(-30, 31, 1)
 y = np.arange(-30, 31, 1)
 X, Y = np.meshgrid(x, y)
-
-Z1.append(en(X,Y,0,3,3))
-Z1.append(en(X,Y,0,17,17))
-Z1.append(en(X,Y,9,0,9))
-Z1.append(en(X,Y,30,0,30))
-Z1.append(en(X,Y,20,0,20))
+Z1=list()
+Z1.append(pdf(0,3,3))
+Z1.append(pdf(0,17,17))
+Z1.append(pdf(9,0,9))
+Z1.append(pdf(30,0,30))
+Z1.append(pdf(20,0,20))
 
 Z=sum(Z1)
 

@@ -25,6 +25,8 @@ state = 1
 x_remind = []
 y_remind = []
 q_remind = []
+thread1 = []
+thread2 = []
 # MotorR.stop()
 # MotorL.stop()
 
@@ -32,7 +34,7 @@ start_time=time.time()
 print("cansat-x :",x,"[m]")
 print("cansat-y :",y,"[m]")
 print("cansat-q :",q,"[rad]")
-
+bno055.bnoread()
 try:
     print("motor run")
     MotorR.stop()
@@ -41,19 +43,15 @@ try:
     MotorR.go(81)
     MotorL.go(80)
 #     MotorR.back(60)
-#     MotorL.go(60)
-#     bno055.bnoread()
+#     MotorL.back(60)
     
     while True:
         t1=time.time()
-        cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
-        #time.sleep(del_t)
+        cansat_speed,cansat_rad_speed, thread1, thread2=Encoder.est_VW(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN, thread1, thread2)
         t2=time.time()
-#         bno055.bnoread()
-#         q=round(bno055.ex,6)
-#         q=radians(round(bno055.ex,3))
         x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
-        
+        bno055.bnoread()
+        q=radians(round(bno055.ex,3))
         print("cansat speed :",cansat_speed,"[m/s]")
         print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
         print("cansat-x :",x,"[m]")
@@ -65,11 +63,11 @@ try:
 #     while True:
 #         if state == 1:
 #             q_remind=[]
-#             MotorR.go(86.5)
+#             MotorR.go(85)
 #             MotorL.go(85)
 #             t1=time.time()
 # #             print(0)
-#             cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
+#             cansat_speed,cansat_rad_speed, thread1, thread2=Encoder.est_VW(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN, thread1, thread2)
 #             t2=time.time()
 #             x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
 #             bno055.bnoread()
@@ -83,16 +81,20 @@ try:
 #             print("sin",sin(q))
 #             x_remind.append(x)
 #             y_remind.append(y)
-#             if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 10:
+# #             if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 2.5:
+#             if sqrt((abs(x))**2 + (abs(y))**2) >= 2:
 #                 state = 2
+#                 thread1 = []
+#                 thread2 = []
 #         elif state == 2:
 #             x_remind=[]
 #             y_remind = []
 # #             print("motor curve") 
-#             MotorR.go(90)
-#             MotorL.go(30)
+#             MotorR.go(60)
+#             MotorL.go(5)
 #             t1=time.time()
-#             cansat_speed,cansat_rad_speed=Encoder.est_v_w_for_c(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
+#             cansat_speed,cansat_rad_speed=Encoder.est_VW_for_c(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
+# #             cansat_speed,cansat_rad_speed, thread1, thread2=Encoder.est_VW(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN, thread1, thread2)
 #             t2=time.time()
 #             x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
 #             bno055.bnoread()
@@ -108,8 +110,10 @@ try:
 #             if sin((abs(q_remind[-1]-q_remind[0])))>=0.9:
 #                 state = 1
 #                 """
-#             if fabs(q-90)<3:
+#             if fabs(q-270)<2:
 #                 state=1
+#                 thread1 = []
+#                 thread2 = []
 #         elif state == 3:
 #             MotorR.go(81)
 #             MotorL.go(80)
@@ -134,7 +138,7 @@ except KeyboardInterrupt:
     MotorR.stop()
     MotorL.stop()
     x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
-#     q=radians(round(bno055.ex,6))
+    q=radians(round(bno055.ex,3))
     print("cansat speed :",cansat_speed,"[m/s]")
     print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
     print("cansat-x :",x,"[m]")
@@ -147,3 +151,4 @@ except KeyboardInterrupt:
     GPIO.cleanup()
 
 GPIO.cleanup()
+

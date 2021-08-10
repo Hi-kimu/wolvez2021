@@ -33,7 +33,7 @@ class GPS(object):
 
     def gpsread(self):
         #while True:
-        if self.mgps.clean_sentences > 20: # ちゃんとしたデーターがある程度たまったら出力する
+        if self.mgps.clean_sentences > 2: # ちゃんとしたデーターがある程度たまったら出力する
              h = str('%02d' % (self.mgps.timestamp[0])) if self.mgps.timestamp[0] < 24 else self.mgps.timestamp[0] - 24
              m = str('%02d' % (self.mgps.timestamp[1]))
              s = str('%02d' % (self.mgps.timestamp[2]))
