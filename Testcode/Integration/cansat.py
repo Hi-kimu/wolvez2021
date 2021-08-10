@@ -483,10 +483,13 @@ class Cansat(object):
                 self.rightmotor.stop()
                 self.leftmotor.stop()
                 #self.switchRadio()#LoRaでログを送信
-                self.LogCansatRSSI.append([self.radio.cansat_rssi])
-                self.LogLostRSSI.append([self.radio.lost_rssi])
-                #print(self.countSwitchLoop)
-                self.countSwitchLoop+=1
+                if self.radio.cansat_rssi==0:
+                    pass
+                else:
+                    self.LogCansatRSSI.append([self.radio.cansat_rssi])
+                    self.LogLostRSSI.append([self.radio.lost_rssi])
+                    #print(self.countSwitchLoop)
+                    self.countSwitchLoop+=1
             else:
                 #RSSIの平均取る
                 self.meanCansatRSSI=np.mean(self.LogCansatRSSI)

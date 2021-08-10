@@ -50,12 +50,14 @@ class radio(object):
     
     def switchData(self, datalog):
         self.sendDevice.cmd_lora(datalog)
+        measuringtime=time.time()
+        
         while True:
-#             print(1000)
             if self.sendDevice.device.inWaiting() > 0:
-#                 print(2000)
+         
                 line = self.sendDevice.device.readline()
                 line = line.decode("utf-8")
+<<<<<<< HEAD
                 #print(line)
                 
                 #print('wait lost...')
@@ -63,27 +65,36 @@ class radio(object):
                 if line.find('RSSI') >= 0 and line.find('information') == -1:
 #                     print(3000)
                     #print(line)
+=======
+                print(line)
+
+                if line.find('RSSI') >= 0 and line.find('information') == -1:
+
+>>>>>>> a9753e9f406be7758d11a71b1898700041dc9e92
                     log = line
-                    ##log_list = log.split('):Receive Data(')
                     log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
     #                     log_list = re.split('dBm|):Receive Data(',log)
                     
-                    
-                    #print(log_list)
-                    # 受信電波強度
-
                     ##self.cansat_rssi = int(log_list[0][5:8])#0-4
                     self.cansat_rssi = float(log_list[0][5:])#0-4
                     #self.cansat_rssi = log_list[0][5:11]#0-4
-                    #print(rssi)#自分が受けたRSSI
-                    # 受信フレーム
+
                     ##self.lost_rssi = int(log_list[1][0:3])#1-最後から3番目の1個前まで
+<<<<<<< HEAD
                     #self.lost_rssi = float(log_list[1][0:-32])#1-最後から3番目の1個前まで
                     self.lost_rssi = float(log_list[1][0:-3])
+=======
+                    self.lost_rssi = float(log_list[1][0:-3])#1-最後から3番目の1個前まで
+>>>>>>> a9753e9f406be7758d11a71b1898700041dc9e92
                     #print('Receive'+ data)
                     #print('-------------')
                     break
-
+            elif time.time()-measuringtime>5:
+                print('返信なし')
+                self.cansat_rssi=0
+                self.lost_rssi=0
+                break
+            
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 
         N_Cansat=2.933
