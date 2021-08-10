@@ -53,14 +53,16 @@ class radio(object):
         measuringtime=time.time()
         
         while True:
+            if time.time()-measuringtime > 5:
+                print('返信なし')
+                self.cansat_rssi=0
+                self.lost_rssi=0
+                break
+            
             if self.sendDevice.device.inWaiting() > 0:
          
                 line = self.sendDevice.device.readline()
                 line = line.decode("utf-8")
-
-                if line.find('RSSI') >= 0 and line.find('information') == -1:
-
-#                 print(line)
 
                 if line.find('RSSI') >= 0 and line.find('information') == -1:
 
@@ -78,11 +80,7 @@ class radio(object):
                     #print('Receive'+ data)
                     #print('-------------')
                     break
-            elif time.time()-measuringtime>5:
-                print('返信なし')
-                self.cansat_rssi=0
-                self.lost_rssi=0
-                break
+            
             
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 

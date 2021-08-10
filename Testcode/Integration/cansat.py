@@ -55,11 +55,13 @@ class Cansat(object):
         self.startstate = 0
         
         #変数
-        self.state = 5
+        self.state = 0
         self.laststate = 0
         self.landstate = 0
-        self.k = 20
+        self.k = 20 #for run 0 < error < 1
+        self.ke = 0.2 #for angle change 0 < error < 180 
         self.v_ref = 90
+        self.v_ref_a = 10
         
         #基準点のGPS情報を取得
         self.gpscount=0
@@ -404,13 +406,21 @@ class Cansat(object):
                         
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
+                            error = self.starttheta - self.ex
+                            ke = self.kp * error + self.v_ref_a
+                            if error < -180:
+                                error += 360
+                            elif error > 180:
+                                error -= 360
                             print(self.gps.gpsdegrees)
                             print("(x,y)"+str(self.x)+","+str(self.y))
-        #                     print("angle:"+str(self.starttheta))
-        #                     print("angle error:"+ str(math.fabs(self.ex - self.starttheta)))
-                            self.rightmotor.back(30)
-                            self.leftmotor.go(30)
-                           
+                            if error > 0:
+                                self.rightmotor.go(ke)
+                                self.lefttmotor.back(ke)
+                            else:
+                                self.rightmotor.back(ke)
+                                self.lefttmotor.go(ke)
+                                    
                         else:#姿勢が変えらたら直進
 
                             self.rightmotor.go(self.v_ref)
@@ -431,7 +441,7 @@ class Cansat(object):
         #                     print("angle:"+str(self.starttheta))
         #                     print("angle error:"+ str(math.fabs(self.ex - self.starttheta)))
                             self.rightmotor.back(30)
-                            self.leftmotor.go(30)
+                            self.leftmotor.go(50)
                            
                         else:#姿勢が変えらたら直進
 
