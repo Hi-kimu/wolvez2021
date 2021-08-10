@@ -302,7 +302,7 @@ class Cansat(object):
             self.leftmotor.stop()
         #self.countPreLoop+ = 1
         if not self.preparingTime == 0:
-            if self.gpscount <= ct.const.GPS_COUNT_LOOP_THRE:
+            if self.gpscount <= ct.const.PREPARING_GPS_COUNT_THRE:
                 self.startgps_lon.append(float(self.gps.Lon))
                 self.startgps_lat.append(float(self.gps.Lat))
                 self.gpscount+=1
@@ -310,7 +310,7 @@ class Cansat(object):
             else:
                 print("GPS completed!!")
             
-            if time.time() - self.preparingTime > ct.const.PREPARING_TIME_LOOP_THRE:
+            if time.time() - self.preparingTime > ct.const.PREPARING_TIME_THRE:
                 self.startlon=np.mean(self.startgps_lon)
                 self.startlat=np.mean(self.startgps_lat)
                 #self.startlon=139.6560590
@@ -329,7 +329,7 @@ class Cansat(object):
                 
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
-            if self.countFlyLoop > ct.const.COUNT_FLIGHTPIN_LOOP_THRE:#一定時間HIGHだったらステート移行
+            if self.countFlyLoop > ct.const.FLYING_FLIGHTPIN_COUNT_THRE:#一定時間HIGHだったらステート移行
                 self.state = 2
                 self.laststate = 2
                
@@ -345,9 +345,9 @@ class Cansat(object):
             self.GREEN_LED.led_off()         
       
         #加速度が小さくなったら着地判定
-        if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.ACC_THRE,2):#加速度が閾値以下で着地判定
+        if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.DROPPING_ACC_THRE,2):#加速度が閾値以下で着地判定
             self.countDropLoop+=1
-            if self.countDropLoop > ct.const.COUNT_ACC_LOOP_THRE:
+            if self.countDropLoop > ct.const.DROPPING_ACC_COUNT_THRE:
                 self.state = 3
                 self.laststate = 3
         else:
@@ -364,7 +364,7 @@ class Cansat(object):
             if self.landstate == 0:
                 self.servomotor.servo_angle(90)#サーボモータ動かしてパラ分離
                 
-                if time.time()-self.landingTime > ct.const.RELEASING_TIME_LOOP_THRE:
+                if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
                     self.servomotor.stop()
                     self.pre_motorTime = time.time()
                     self.landstate = 1
@@ -373,7 +373,7 @@ class Cansat(object):
                 self.rightmotor.go(100)
                 self.leftmotor.go(100)
 
-                if time.time()-self.pre_motorTime > ct.const.PRE_MOTOR_TIME_LOOP_THRE:
+                if time.time()-self.pre_motorTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE:
                     self.rightmotor.stop()
                     self.leftmotor.stop()
                     self.state = 4
@@ -467,7 +467,9 @@ class Cansat(object):
                 
                     
                             
-                if time.time() - self.startingTime > 30:#30秒経ってもスタート地点に着いてない場合は最初からやりなおす
+                if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
+                    self.state = 5
+                    self.laststate = 5
                     #self.startstate=0
                     pass
                 
@@ -489,7 +491,7 @@ class Cansat(object):
                 self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
                 
         else:
-            if self.countSwitchLoop < ct.const.SWITCH_LOOP_THRE:
+            if self.countSwitchLoop < ct.const.MEASURING_SWITCH_COUNT_THRE:
                 self.rightmotor.stop()
                 self.leftmotor.stop()
                 #self.switchRadio()#LoRaでログを送信
@@ -529,7 +531,7 @@ class Cansat(object):
                 self.LogLostRSSI=[]
                 self.LogData=[]
                 
-                if self.measuringcount == ct.const.MAX_MEASURING_COUNT:
+                if self.measuringcount == ct.const.MEASURING_MAX_MEASURING_COUNT_THRE:
                     self.state = 7
                     self.laststate = 7
                 
