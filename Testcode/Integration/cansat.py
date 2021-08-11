@@ -55,7 +55,7 @@ class Cansat(object):
         self.startstate = 0
         
         #変数
-        self.state = 0
+        self.state = 5
         self.laststate = 0
         self.landstate = 0
         self.k = 20 #for run 0 < error < 1
@@ -220,7 +220,7 @@ class Cansat(object):
         self.ez=round(self.bno055.ez,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
-        print_datalog = = str(self.timer) + ","\
+        print_datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
                   + str(self.gps.Time) + ","\
                   + str(self.gps.Lat).rjust(6) + ","\
@@ -325,7 +325,7 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_off()
             self.rightmotor.stop()
-            self.leftmotor.stop()(pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2))
+            self.leftmotor.stop()
                 
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1

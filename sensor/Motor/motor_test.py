@@ -3,13 +3,13 @@ import RPi.GPIO as GPIO
 import time 
 
 GPIO.setwarnings(False)
-Motor1 = motor.motor(5,6,13)
-Motor2 = motor.motor(16,20,12)
+Motor1 = motor.motor(6,5,13)
+Motor2 = motor.motor(20,16,12)
 
 try:
     print("motor run") 
 
-    Motor1.go(85)
+    #Motor1.go(85)
     Motor2.go(85)
  #   Motor1.back(85)
 #   Motor2.back(85)
