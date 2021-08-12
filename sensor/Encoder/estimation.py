@@ -185,13 +185,16 @@ class estimation():
             
             self.encoded=(self.current_a<<1)|self.current_b
             sum=(self.prev_data<<2)|self.encoded
+#             print(sum)
 
             if sum==0b0010:
                 self.enc_time.append(time.time())
                 self.kaiten1=1
+#                 print("right1")
             elif sum==0b1000:
                 self.enc_time.append(time.time())
                 self.kaiten1=2
+#                 print("right2")
 
             if len(self.enc_time)==self.iteration:
 
@@ -218,10 +221,12 @@ class estimation():
             
             self.encoded2=(self.current_c<<1)|self.current_d
             sum=(self.prev_data2<<2)|self.encoded2
+#             print(sum)
         
             if sum==0b0010:
                 self.enc_time2.append(time.time())
                 self.kaiten2=1
+#                 print("left1")
             elif sum==0b1000:
                 self.enc_time2.append(time.time())
                 self.kaiten2=2
