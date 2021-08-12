@@ -220,7 +220,7 @@ class Cansat(object):
         self.ez=round(self.bno055.ez,3)
         
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
-        print_datalog = = str(self.timer) + ","\
+        print_datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
                   + str(self.gps.Time) + ","\
                   + str(self.gps.Lat).rjust(6) + ","\
