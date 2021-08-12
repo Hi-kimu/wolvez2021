@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-#oneside
 import lora_setting
 import time
 
@@ -13,7 +12,6 @@ class LoraSwitClass:
 
     # ES920LRデータ送受信メソッド
     def lora_swit(self):
-        LogLostRSSI=list()
         # LoRa初期化
         self.switDevice.reset_lora()
         # LoRa設定コマンド
@@ -25,48 +23,32 @@ class LoraSwitClass:
         while True:
             try:
                 # ES920LRモジュールから値を取得
-                
                 if self.switDevice.device.inWaiting() > 0:
                     try:
-#                         start=time.time()
                         line = self.switDevice.device.readline()
                         line = line.decode("utf-8")
-                        
-#                         print("line:"+str(line))
+                    
+                        print(line)
                         if line.find('RSSI') >= 0 and line.find('information') == -1:
-                            
-#                             start=time.time()
                             log = line
-                            log_list = log.split('dBm')                      
-                            LogLostRSSI.append(float(log_list[0][5:]))
-                            
-
-
+#                             log_list = log.split('):Receive Data(')
+                            log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
+                            # 受信電波強度
+                            rssi = float(log_list[0][5:])
+                            print(rssi)
+                            # 受信フレーム
+#                             data = log_list[1][:-3]
+                            data = float(log_list[1][0:-3])
+                            print(data)
+                            time.sleep(1)
                             #senddata
-                        elif len(LogLostRSSI)>=3:
-                             #cansat機側のconst.SWITCH_LOOP_THREとそろえるコード書く
-                            senddata = LogLostRSSI #strよりfloatの方がはやい
-
-#                             time2=time.time()-time1_
-#                             time3=time.time()-start
-#                             print("time2:"+str(time2))
-#                             print("time3:"+str(time3))
-                            
+                            senddata = rssi #ここの型をstringにする必要あるかも                    
                             print('<-- SEND -- [ {} ]'.format(senddata))
-                            
-                            #cansat機側のconst.SWITCH_LOOP_THREとと同じ回数だけ送るコード書く
-                            for i in range(len(LogLostRSSI)+1):
-                                self.switDevice.cmd_lora('{}'.format(i))
-                                #self.switDevice.cmd_lora('{}'.format(senddata))
-                            
-                            LogLostRSSI=list()
+                            self.switDevice.cmd_lora('{}'.format(senddata))
                             print('------------')
-                            
-                            
                     except Exception as e:
                         print(e)
                         continue   
             except KeyboardInterrupt:
                 self.switDevice.close()
                 
-

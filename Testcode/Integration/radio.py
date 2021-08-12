@@ -82,6 +82,7 @@ class radio(object):
                     #print('Receive'+ data)
                     #print('-------------')
                     break
+<<<<<<< HEAD
 
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 
@@ -95,6 +96,21 @@ class radio(object):
         N_Lost=2.933
         MP_Lost=-37.30
 
+=======
+    
+    
+    def estimate_distance_Cansat(self,meanCansatRSSI):
+        N_Cansat=2.8
+        MP_Cansat=-42.2
+        return 10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))
+        
+    def estimate_distance_Lost(self,meanLostRSSI):
+        return 10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))
+                    
+    def estimate_distance_Lost(self,meanLostRSSI):
+        N_Lost=2.8
+        MP_Lost=-45.3
+>>>>>>> bb3ca0e27868288d34a9ee6e86e271f28457629a
         return 10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
         
   

@@ -28,9 +28,15 @@ const.ACC_THRE = 1 #加速度の値
 const.COUNT_ACC_LOOP_THRE = 200
 const.COUNT_FLIGHTPIN_THRE = 10
 const.LANDING_TIME_THRE = 5
+<<<<<<< HEAD
 const.RELEASING_TIME_THRE = 10
 const.PRE_MOTOR_TIME_THRE = 2
 const.SWITCH_LOOP_THRE = 2 #1地点での測位回数
+=======
+const.RELEASING_TIME_THRE = 30
+const.PRE_MOTOR_TIME_THRE = 5
+const.SWITCH_LOOP_THRE = 30 #1地点での測位回数
+>>>>>>> bb3ca0e27868288d34a9ee6e86e271f28457629a
 const.COUNT_GOAL_LOOP_THRE = 50
 const.ANGLE_THRE = 10
 const.ANGLE_COUNT_THRE = 10 
