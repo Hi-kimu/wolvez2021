@@ -21,6 +21,7 @@ class LoraSwitClass:
         self.switDevice.setup_lora(set_mode)
         # LoRa(ES920LR)受信待機
         while True:
+#             print("enter the loop")
             try:
                 # ES920LRモジュールから値を取得
                 if self.switDevice.device.inWaiting() > 0:
@@ -61,4 +62,11 @@ class LoraSwitClass:
                         continue   
             except KeyboardInterrupt:
                 self.switDevice.close()
-                
+# print("hello")
+# 
+# def say_hello():
+#     print("hello")
+#     
+# if __name__ == '__main__':
+#     say_hello()
+#     
