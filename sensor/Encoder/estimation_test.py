@@ -48,7 +48,7 @@ try:
 #         t1=time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
         #time.sleep(del_t)
-#         t2=time.time()
+#        t2=time.time()
         bno055.bnoread()
         q=round(bno055.ex,6)
         q=radians(round(bno055.ex,3))
@@ -59,7 +59,10 @@ try:
         print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
         print("cansat-x :",x,"[m]")
         print("cansat-y :",y,"[m]")
-        print("cansat-q :",q,"[rad]")    
+        print("cansat-q :",q,"[rad]")
+        if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 5:
+            MotorR.stop()
+            MotorL.stop()
 # bno055.bnoread()
 # try:
 #     print("motor run")
