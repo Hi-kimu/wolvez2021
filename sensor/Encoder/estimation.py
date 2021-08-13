@@ -176,7 +176,7 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=898
-        self.iteration=30
+        self.iteration=50
         self.kaiten1=0
         self.kaiten2=0
         self.low = 0.6
