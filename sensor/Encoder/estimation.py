@@ -185,6 +185,7 @@ class estimation():
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
             self.current_b=GPIO.input(self.pin_b)
+#             print(self.current_a)
             
             self.encoded=(self.current_a<<1)|self.current_b
             sum=(self.prev_data<<2)|self.encoded
