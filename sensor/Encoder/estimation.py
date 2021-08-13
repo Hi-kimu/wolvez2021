@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import math
+import statistics
 import numpy as np
 
 class estimation():
@@ -175,9 +176,11 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=898
-        self.iteration=500
+        self.iteration=30
         self.kaiten1=0
         self.kaiten2=0
+        self.low = 0.6
+        self.high = 1.4
     
         while self.mot_speed==0:
             self.current_a=GPIO.input(self.pin_a)
@@ -203,6 +206,17 @@ class estimation():
                 for i in range(0,len(self.enc_time)-1):
                     self.enc_del_time[i]=self.enc_time[i+1]-self.enc_time[i]
                 
+                self.enc_del_time_mean = statistics.median(self.enc_del_time)
+                self.enc_del_time_low = self.enc_del_time_mean*self.low
+                self.enc_del_time_high = self.enc_del_time_mean*self.high
+                self.enc_rec = []
+
+                for i in range(0, len(self.enc_del_time)):
+                    if self.enc_del_time[i] < self.enc_del_time_low or self.enc_del_time[i] > self.enc_del_time_high:
+                        self.enc_rec.append(i)
+                for i in range(0, len(self.enc_rec)):
+                    del self.enc_del_time[self.enc_rec[i]-i]
+                
                 self.enc_ave_time=np.mean(self.enc_del_time)
                 if self.kaiten1==1:
                     self.mot_speed=1/(self.pulse*self.enc_ave_time)
@@ -214,7 +228,7 @@ class estimation():
             
             self.prev_data=self.encoded
             self.prev_angle = self.angle
-        
+#         
         while self.mot_speed2==0:
             self.current_c=GPIO.input(self.pin_c)
             self.current_d=GPIO.input(self.pin_d)
@@ -235,6 +249,19 @@ class estimation():
                     self.enc_del_time2.append(0)
                 for i in range(0,len(self.enc_time2)-1):
                     self.enc_del_time2[i]=self.enc_time2[i+1]-self.enc_time2[i]
+                
+#                 print(self.enc_del_time2)
+                self.enc_del_time2_mean = statistics.median(self.enc_del_time2)
+                self.enc_del_time2_low = self.enc_del_time2_mean*self.low
+                self.enc_del_time2_high = self.enc_del_time2_mean*self.high
+                self.enc2_rec = []
+
+                for i in range(0, len(self.enc_del_time2)):
+                    if self.enc_del_time2[i] < self.enc_del_time2_low or self.enc_del_time2[i] > self.enc_del_time2_high:
+                        self.enc2_rec.append(i)
+                for i in range(0, len(self.enc2_rec)):
+                    del self.enc_del_time2[self.enc2_rec[i]-i]
+#                 print(self.enc_del_time2)
                 
                 self.enc_ave_time2=np.mean(self.enc_del_time2)
                 if self.kaiten2==1:
