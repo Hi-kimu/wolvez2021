@@ -36,9 +36,6 @@ class radio(object):
         
     def recieveData(self):
             # ES920LRモジュールから値を取得
-        isReceive=0
-        mean=0
-        std=0
         if self.sendDevice.device.inWaiting() > 0:
             
             line = self.sendDevice.device.readline()
@@ -49,17 +46,13 @@ class radio(object):
                 log = line
                 print(line)                    
                 log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')            
-              #karakanakamiarukasiraberuhensuu  
-                cansat_rssi = float(log_list[0][5:])#0-4   
+                
+                self.cansat_rssi = float(log_list[0][5:])#0-4   
 #                     self.lost_rssi = float(log_list[1][0:-3])
 #                   
-                lost_mean =log_list[1][0:-2] # lost mean [0:-2]change
-                lost_std =log_list[1][0:-2] # lost std
-
-                isReceive=1
-        
+                self.lost_rssi =log_list[1][0:-2] # change type YUNO
+                print(type(self.lost_rssi))
     
-        return isReceive,cansat_rssi,lost_mean,lost_std
     
     def switchData(self, datalog):
 #         self.sendDevice.cmd_lora(datalog)
@@ -71,7 +64,7 @@ class radio(object):
         while True:
             if lstate == 0:
                 # send only
-                if lstart_time - time.time() > 20:
+                if lstart_time - time.time() > 5:
                     lstate = 1
                 else:
                     self.sendData("a")
@@ -88,32 +81,35 @@ class radio(object):
                  
             elif lstate == 2:
                 # recieve
-                
                 while True:
-                    isReceive,cansat_rssi,lost_mean,lost_std=self.recieveData()
-                    self.LogCansatRSSI.append(cansat_rssi)
-                    
+                    recieveData(self)
                     # store data
-                    if len(self.LogCansatRSSI) > 10:                       
-                        break
-                                                                                   
+                    
+                
+                
+                
             if self.sendDevice.device.inWaiting() <= 0:
                 self.sendDevice.cmd_lora(datalog)
                 print("sending")
 #                 time.sleep(10)                
-            elif self.sendDevice.device.inWaiting() > 0:
+            if self.sendDevice.device.inWaiting() > 0:
                 start=time.time()
 
                 line = self.sendDevice.device.readline()
                 line = line.decode("utf-8")
 
                 if line.find('RSSI') >= 0 and line.find('information') == -1:        
-
+#                     time1=time.time()-start
+#                     time1_=time.time()
+#                     print("time1:"+str(time1))
 #                        
                     log = line
                     print(line)                    
                     log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
-
+#                     time2=time.time()-time1_
+#                     time2_=time.time()
+#                     print("time2:"+str(time2))
+              
                     
                     self.cansat_rssi = float(log_list[0][5:])#0-4   
 #                     self.lost_rssi = float(log_list[1][0:-3])

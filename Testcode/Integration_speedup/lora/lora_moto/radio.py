@@ -68,8 +68,9 @@ class radio(object):
                     
                     
                     log = line
+                    print(line)
                     ##log_list = log.split('):Receive Data(')
-                    log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
+                    log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
                     time2=time.time()-time1_
                     time2_=time.time()
                     print("time2:"+str(time2))
