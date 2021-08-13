@@ -35,30 +35,34 @@ print("cansat-q :",q,"[rad]")
 
 try:
     print("motor run")
-    MotorR.stop()
-    MotorL.stop()
+#     MotorR.stop()
+#     MotorL.stop()
     
-    MotorR.go(81)
+    MotorR.go(80)
     MotorL.go(80)
 #     MotorR.back(60)
 #     MotorL.go(60)
 #     bno055.bnoread()
-    
+    t_new = time.time()
     while True:
-        t1=time.time()
+#         t1=time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
         #time.sleep(del_t)
-        t2=time.time()
-#         bno055.bnoread()
-#         q=round(bno055.ex,6)
-#         q=radians(round(bno055.ex,3))
-        x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
-        
+#        t2=time.time()
+        bno055.bnoread()
+        q=round(bno055.ex,6)
+        q=radians(round(bno055.ex,3))
+        t_old = t_new
+        t_new = time.time()
+        x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t_new-t_old,x,y,q)
         print("cansat speed :",cansat_speed,"[m/s]")
         print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
         print("cansat-x :",x,"[m]")
         print("cansat-y :",y,"[m]")
-        print("cansat-q :",q,"[rad]")    
+        print("cansat-q :",q,"[rad]")
+        if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 5:
+            MotorR.stop()
+            MotorL.stop()
 # bno055.bnoread()
 # try:
 #     print("motor run")
@@ -130,11 +134,15 @@ try:
         
     #time.sleep(1)
 except KeyboardInterrupt:
-    t2=time.time()
+    
     MotorR.stop()
     MotorL.stop()
-    x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t2-t1,x,y,q)
-#     q=radians(round(bno055.ex,6))
+    bno055.bnoread()
+    q=round(bno055.ex,6)
+    q=radians(round(bno055.ex,3))
+    t_old = t_new
+    t_new = time.time()
+    x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t_new-t_old,x,y,q)
     print("cansat speed :",cansat_speed,"[m/s]")
     print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
     print("cansat-x :",x,"[m]")
