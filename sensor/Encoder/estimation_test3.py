@@ -1,5 +1,6 @@
 import motor
 import estimation
+import math
 import constant as ct
 import RPi.GPIO as GPIO
 import time
@@ -22,6 +23,8 @@ q=0
 del_t=0.2
 hantei = 0
 state = 1
+k = 10
+v_ref = 80
 x_remind = []
 y_remind = []
 q_remind = []
@@ -41,29 +44,33 @@ try:
     y_remind.append(0)
     bno055.bnoread()
     q=radians(round(bno055.ex,3))
-    MotorR.go(60)
-    MotorL.go(61)
+    MotorR.go(v_ref)
+    MotorL.go(v_ref)
 #     MotorR.back(60)
 #     MotorL.go(60)
 #     bno055.bnoread()
     t_new = time.time()
     while True:
+        error=math.sin(math.radians(0)) - math.sin(q)
+        ke=k*error
+
+        MotorL.go(v_ref+ke)
+        MotorR.go(v_ref-ke)
 #         t1=time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
         #time.sleep(del_t)
 #        t2=time.time()
         bno055.bnoread()
-        q=round(bno055.ex,6)
         q=radians(round(bno055.ex,3))
         t_old = t_new
         t_new = time.time()
         x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t_new-t_old,x,y,q)
         x_remind.append(x)
         y_remind.append(y)
-        if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 5:
-            MotorR.stop()
-            MotorL.stop()
-            break
+#         if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 5:
+#             MotorR.stop()
+#             MotorL.stop()
+#             break
         print("cansat speed :",cansat_speed,"[m/s]")
         print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
         print("cansat-x :",x,"[m]")
