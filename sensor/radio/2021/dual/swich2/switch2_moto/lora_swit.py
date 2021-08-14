@@ -21,28 +21,39 @@ class LoraSwitClass:
         self.switDevice.setup_lora(set_mode)
         # LoRa(ES920LR)受信待機
         while True:
+#             print("enter the loop")
             try:
                 # ES920LRモジュールから値を取得
                 if self.switDevice.device.inWaiting() > 0:
                     try:
+                        start=time.time()
                         line = self.switDevice.device.readline()
                         line = line.decode("utf-8")
-                    
-                        print(line)
+                        
+#                         print("line:"+str(line))
                         if line.find('RSSI') >= 0 and line.find('information') == -1:
+                            
+                            start=time.time()
                             log = line
-#                             log_list = log.split('):Receive Data(')
-                            log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
+                            log_list = log.split('dBm')
+                            
                             # 受信電波強度
-                            rssi = float(log_list[0][5:])
-                            print(rssi)
-                            # 受信フレーム
-#                             data = log_list[1][:-3]
-                            data = float(log_list[1][0:-32])
-                            print(data)
-                            time.sleep(1)
+                            
+# #                             rssi = float(log_list[0][5:])
+                            rssi = log_list[0][5:]
+#                             print(rssi)
+                            time1=time.time()-start
+                            time1_=time.time()
+                            print("time1:"+str(time1))
+
                             #senddata
-                            senddata = rssi #ここの型をstringにする必要あるかも                    
+                            senddata = rssi #strよりfloatの方がはやい
+#                             senddata=str(rssi)
+                            time2=time.time()-time1_
+                            time3=time.time()-start
+                            print("time2:"+str(time2))
+                            print("time3:"+str(time3))
+                            
                             print('<-- SEND -- [ {} ]'.format(senddata))
                             self.switDevice.cmd_lora('{}'.format(senddata))
                             print('------------')
@@ -51,4 +62,11 @@ class LoraSwitClass:
                         continue   
             except KeyboardInterrupt:
                 self.switDevice.close()
-                
+# print("hello")
+# 
+# def say_hello():
+#     print("hello")
+#     
+# if __name__ == '__main__':
+#     say_hello()
+#     
