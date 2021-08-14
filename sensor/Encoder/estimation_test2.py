@@ -42,8 +42,8 @@ try:
     
     MotorR.go(81)
     MotorL.go(80)
-#     MotorR.back(60)
-#     MotorL.back(60)
+#     MotorR.back(80)
+#     MotorL.back(80)
     
     while True:
         t1=time.time()

@@ -20,17 +20,17 @@ x = np.arange(-30, 31, 1)
 y = np.arange(-30, 31, 1)
 X, Y = np.meshgrid(x, y)
 Z1=list()
-Z1.append(pdf(0,3,3))
-Z1.append(pdf(0,17,17))
-Z1.append(pdf(9,0,9))
-Z1.append(pdf(30,0,30))
-Z1.append(pdf(20,0,20))
+Z1.append(pdf(0,3,5))
+Z1.append(pdf(0,17,13))
+Z1.append(pdf(9,0,12))
+Z1.append(pdf(30,0,34))
+Z1.append(pdf(20,0,16))
 
 Z=sum(Z1)
 
 
 Zc=np.unravel_index(np.argmax(Z), Z.shape)
-print(Zc[1],Zc[0])
+#print(Zc[1],Zc[0])
 
 fig = plt.figure()
 ax = Axes3D(fig)
@@ -40,6 +40,8 @@ ax.set_ylabel("y")
 ax.set_zlabel("z")
 surf=ax.plot_surface(X, Y, Z, cmap=plt.cm.jet,linewidth=0, antialiased=False)
 ax.scatter(x[Zc[1]], y[Zc[0]], np.max(Z),s = 40,c='k',)
+
+print(x[Zc[1]], y[Zc[0]])
 
 # z軸の設定
 ax.set_xlim(-30.01, 30.01)
