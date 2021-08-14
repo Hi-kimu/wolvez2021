@@ -81,10 +81,7 @@ class Cansat(object):
         self.countSwitchLoop=0
         self.countGoal = 0
         self.countgrass=0
-        
-        #GPIO設定
- 
-        
+                
  
     def setup(self):
         self.radio.setupRadio()

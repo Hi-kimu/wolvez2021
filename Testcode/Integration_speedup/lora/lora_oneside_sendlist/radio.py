@@ -34,28 +34,35 @@ class radio(object):
         #print(datalog)
         self.sendDevice.cmd_lora(datalog)
         
-    def recieveData(self):
+    def receiveData(self):
             # ES920LRモジュールから値を取得
         isReceive=0
-        mean=0
-        std=0
+        cansat_rssi = 0
+        log_meanstd=0
+        lost_mean= 0
+        lost_std=0
         if self.sendDevice.device.inWaiting() > 0:
             
             line = self.sendDevice.device.readline()
             line = line.decode("utf-8")
             
-            print(line)
+           # print(line)
             if line.find('RSSI') >= 0 and line.find('information') == -1:
                 log = line
-                print(line)                    
+             #   print(line)                    
                 log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')            
               #karakanakamiarukasiraberuhensuu  
                 cansat_rssi = float(log_list[0][5:])#0-4   
 #                     self.lost_rssi = float(log_list[1][0:-3])
 #                   
-                lost_mean =log_list[1][0:-2] # lost mean [0:-2]change
-                lost_std =log_list[1][0:-2] # lost std
-
+                lost_meanstd =log_list[1][0:-2]
+                lost_meanstd_list = lost_meanstd.split(',')
+                lost_mean = lost_meanstd_list[0][0:]
+                lost_std = lost_meanstd_list[1][0:]
+                print(lost_meanstd)
+                print(lost_mean)
+                print(lost_std)
+                
                 isReceive=1
         
     
@@ -65,80 +72,52 @@ class radio(object):
 #         self.sendDevice.cmd_lora(datalog)
         lstate = 0
         lstart_time = time.time()
+        lost_mean=0
+        lost_std=0
 #         while True:
-#             self.recieveData()
+#             self.receiveData()
             
         while True:
+            
             if lstate == 0:
                 # send only
-                if lstart_time - time.time() > 20:
+#                 print('state:'+str(lstate))
+                if  time.time()-lstart_time  > 10:
                     lstate = 1
                 else:
-                    self.sendData("a")
-                    time.sleep(0.5)
+                    self.sendData(datalog)
+#                     time.sleep(0.5)
                 
             elif lstate == 1:
-                # send and recieve
-                self.sendData("b")
-                t_start=time.time()
-                while time.time() - t_start < 2:
-                    if self.sendDevice.device.inWaiting() > 0:
-                        lstate = 2
-                        break
+                print('state:'+str(lstate))
+                # send and receive
+              
+#                     t_start=time.time()
+                isReceive,cansat_rssi,lost_mean,lost_std = self.receiveData()
+                print(isReceive)
+                if isReceive ==1:
+                    lstate=2
+                    
+                else:
+                    self.sendData(datalog)
+                    
+                    
+#                     while time.time() - t_start < 1:
+#                         if isReceive ==1:
+#                             lstate = 2
+#                             break
                  
             elif lstate == 2:
-                # recieve
-                
-                while True:
-                    isReceive,cansat_rssi,lost_mean,lost_std=self.recieveData()
+                print('state:'+str(lstate))
+                # receive
+                isReceive,cansat_rssi,lost_mean,lost_std=self.receiveData()
+                if isReceive==1:                       
                     self.LogCansatRSSI.append(cansat_rssi)
                     
                     # store data
-                    if len(self.LogCansatRSSI) > 10:                       
+                elif len(self.LogCansatRSSI) > 30:                       
                         break
                                                                                    
-            if self.sendDevice.device.inWaiting() <= 0:
-                self.sendDevice.cmd_lora(datalog)
-                print("sending")
-#                 time.sleep(10)                
-            elif self.sendDevice.device.inWaiting() > 0:
-                start=time.time()
-
-                line = self.sendDevice.device.readline()
-                line = line.decode("utf-8")
-
-                if line.find('RSSI') >= 0 and line.find('information') == -1:        
-
-#                        
-                    log = line
-                    print(line)                    
-                    log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
-
-                    
-                    self.cansat_rssi = float(log_list[0][5:])#0-4   
-#                     self.lost_rssi = float(log_list[1][0:-3])
-#                   
-                    self.lost_rssi =log_list[1][0:-1]
-                    
-#                     time3=time.time()-time2_
-#                     time3_=time.time()
-#                     print("time3:"+str(time3))
-#
-                else:
-                    log = line
-                    print(line)                    
-                    log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
-#                     time2=time.time()-time1_
-#                     time2_=time.time()
-#                     print("time2:"+str(time2))
-              
-                    
-                    self.cansat_rssi = float(log_list[0][5:])#0-4   
-#                     self.lost_rssi = float(log_list[1][0:-3])
-#                                                                          
-                    print('-------------')
-                    break
-
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 
         N_Cansat=2.933
