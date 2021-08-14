@@ -36,6 +36,50 @@ print("cansat-x :",x,"[m]")
 print("cansat-y :",y,"[m]")
 print("cansat-q :",q,"[rad]")
 
+STUCK_ACC_THRE=0.1
+
+def stuck_detection():#スタック検知
+    while (pow(bno055.Ax,2) + pow(bno055.Ay,2) + pow(bno055.Az,2)) < STUCK_ACC_THRE:#加速度センサの閾値
+        print("stuck!!!!!")
+        print("accu_all:",round(bno055.Ax,3)**2 + round(bno055.Ay,3)**2 + round(bno055.Az,3)**2)
+        back = False #バックでスタックから脱出したい場合True,トルネードならFalse
+
+        MotorR.stop()
+        MotorL.stop()
+        print("Motor stopped")
+
+        if back:#バックで脱出
+            print("back")
+            MotorR.back(70)
+            MotorL.back(70) 
+            time.sleep(3)
+            MotorR.stop()
+            MotorL.stop()
+            time.sleep(3)
+            MotorR.back(30)
+            MotorL.back(80)
+            time.sleep(1)
+            print("back finished")
+
+        else:#トルネードで脱出
+            MotorR.go(70)
+            MotorL.back(70)
+            time.sleep(3)
+            MotorR.stop()
+            MotorL.stop()
+            time.sleep(3)
+            MotorR.go(v_ref)
+            MotorL.go(v_ref)
+            time.sleep(1)
+            print("tornade finished")
+        
+        bno055.bnoread()
+        
+        if (round(bno055.Ax,3)**2 + round(bno055.Ay,3)**2 + round(bno055.Az,3)**2) >= STUCK_ACC_THRE:
+            print("evacuated from stuck")
+            break
+
+
 try:
     print("motor run")
 #     MotorR.stop()
@@ -44,7 +88,7 @@ try:
     y_remind.append(0)
     bno055.bnoread()
     q=radians(round(bno055.ex,3))
-    time.sleep(2)
+    time.sleep(1)
     error=math.sin(math.radians(0)) - math.sin(q)
     ke=k*error
 
@@ -60,6 +104,7 @@ try:
 
         MotorL.go(v_ref+ke)
         MotorR.go(v_ref-ke)
+        print("cansat going!!!")
 #         t1=time.time()
         t1 = time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
@@ -74,6 +119,10 @@ try:
         x,y,q=Encoder.odometri(cansat_speed,cansat_rad_speed,t_new-t_old,x,y,q)
         x_remind.append(x)
         y_remind.append(y)
+        
+        time.sleep(2)
+        stuck_detection()
+        print("no stuck")
 #         if sqrt((abs(x_remind[-1]-x_remind[0]))**2 + (abs(y_remind[-1]-y_remind[0]))**2) >= 5:
 #             MotorR.stop()
 #             MotorL.stop()

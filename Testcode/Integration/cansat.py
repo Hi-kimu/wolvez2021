@@ -55,7 +55,7 @@ class Cansat(object):
         self.startstate = 0
         
         #変数
-        self.state = 8
+        self.state = 4
         self.laststate = 0
         self.landstate = 0
         self.k = 20 #for run 0 < error < 1
@@ -105,6 +105,7 @@ class Cansat(object):
         self.t_new=0
         self.t_old=0
         self.azimuth=[90, 0, 270, 180]
+        self.kp = 4
      
         #n点測位用の変数
         self.measureringTimeLog=list()
@@ -181,7 +182,7 @@ class Cansat(object):
         self.timer = 1000*(time.time() - self.startTime) #経過時間 (ms)
         self.timer = int(self.timer)
         self.gps.gpsread()
-        self.bno055.bnoread()
+        self.bno055.bnoread()#加速度センサの値をここで習得
         self.writeData()#txtファイルへのログの保存
     
         if not self.state == 1: #preparingのときは電波を発しない
@@ -202,6 +203,40 @@ class Cansat(object):
         self.t_old=self.t_new
         self.t_new=time.time()
         self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t_new-self.t_old,self.x,self.y,self.q)
+    
+    def stuck_detection(self):#スタック検知
+        if (self.Ax**2 + self.Ay**2 + self.Az**2) < ct.const.STUCK_ACC_THRE:#加速度センサの閾値
+            print("stuck!!!!!")
+            back = False #バックでスタックから脱出したい場合True,トルネードならFalse
+
+            self.rightmotor.stop()
+            self.leftmotor.stop()
+
+            if back:#バックで脱出
+                print("back")
+                self.rightmotor.back(100)
+                self.leftmotor.back(100) 
+                time.sleep(1)
+                self.rightmotor.back(30)
+                self.leftmotor.back(80)
+                time.sleep(1)
+
+            else:#トルネードで脱出
+                self.rightmotor(100)
+                self.leftmotor.back(100)
+                time.sleep(1)
+                self.rightmotor(self.v_ref)
+                self.leftmotor(self.v_ref)
+                time.sleep(1)
+
+    def rotation(self, q_ref):
+        error_0 = q_ref-self.Ax
+        if error_0 != 0:
+            self.rightmotor(50)
+            self.leftmotor.back(50)
+        else:
+            self.rightmotor.stop()
+            self.leftmotor.stop()
 
     def integ(self):#センサ統合用
         self.rightmotor.go(60)
@@ -274,13 +309,13 @@ class Cansat(object):
         self.radio.switchData(datalog) #データを送信    
     
     def sequence(self):
-        if self.state == 0:
+        if self.state == 0:#準備フェーズ
             self.preparing()
-        elif self.state == 1:
+        elif self.state == 1:#降下フェーズ
             self.flying()
-        elif self.state == 2:
+        elif self.state == 2:#降下終了
             self.dropping()
-        elif self.state == 3:
+        elif self.state == 3:#着陸検知後
             self.landing()
         elif self.state == 4:
             self.starting()
@@ -328,7 +363,7 @@ class Cansat(object):
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_off()
             self.rightmotor.stop()
-            self.leftmotor.stop()
+            self.leftmotor.stop()(pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2))
                 
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
@@ -429,10 +464,10 @@ class Cansat(object):
                     
                             if error > 0:
                                 self.rightmotor.go(ke)
-                                self.lefttmotor.back(ke)
+                                self.leftmotor.back(ke)
                             else:
                                 self.rightmotor.back(ke)
-                                self.lefttmotor.go(ke)
+                                self.leftmotor.go(ke)
                                     
                         else:#姿勢が変えらたら直進
 
@@ -522,7 +557,7 @@ class Cansat(object):
                 self.n_LogData.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
-                self.n_LogLostRSSI.append(self.LogLostRSSI)
+                self.n_LogCansatRSSI.append(self.LogLostRSSI)
                 
                 self.meanCansatRSSI=0
                 self.meanLostRSSI=0
@@ -607,7 +642,8 @@ class Cansat(object):
                 else:
                     self.motor_run()
                     self.odometry()
-                        
+                    self.stuck_detection()
+
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.positioningTime = time.time()
@@ -620,14 +656,6 @@ class Cansat(object):
             if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
                 self.graph(self.n_pdf_sum)
-                
-                
-                with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
-                    test.write(str(n_LogData) + '\n')
-                    test.write(str(n_LogCanSatRSSI) + '\n')
-                    test.write(str(n_LogLostRSSI) + '\n')
-                
-                
                 self.state = 8
                 self.laststate = 8
             else:
