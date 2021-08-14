@@ -23,8 +23,8 @@ q=0
 del_t=0.2
 hantei = 0
 state = 1
-k = 10
-v_ref = 80
+k = 20
+v_ref = 70
 x_remind = []
 y_remind = []
 q_remind = []
@@ -44,8 +44,12 @@ try:
     y_remind.append(0)
     bno055.bnoread()
     q=radians(round(bno055.ex,3))
-    MotorR.go(v_ref)
-    MotorL.go(v_ref)
+    time.sleep(2)
+    error=math.sin(math.radians(0)) - math.sin(q)
+    ke=k*error
+
+    MotorL.go(v_ref+ke)
+    MotorR.go(v_ref-ke)
 #     MotorR.back(60)
 #     MotorL.go(60)
 #     bno055.bnoread()
@@ -57,7 +61,10 @@ try:
         MotorL.go(v_ref+ke)
         MotorR.go(v_ref-ke)
 #         t1=time.time()
+        t1 = time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
+        t2 = time.time()
+        print("odometri time:", t2-t1)
         #time.sleep(del_t)
 #        t2=time.time()
         bno055.bnoread()
