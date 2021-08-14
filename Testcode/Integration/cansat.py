@@ -625,6 +625,7 @@ class Cansat(object):
                     test.write(str(n_LogCanSatRSSI) + '\n')
                     test.write(str(n_LogLostRSSI) + '\n')
                 
+                
                 self.state = 8
                 self.laststate = 8
             else:
