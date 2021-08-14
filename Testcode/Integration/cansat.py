@@ -102,8 +102,8 @@ class Cansat(object):
         self.x=0
         self.y=0
         self.q=0
-        self.t1=0
-        self.t2=0
+        self.t_new=0
+        self.t_old=0
         self.azimuth=[90, 0, 270, 180]
      
         #n点測位用の変数
@@ -194,11 +194,14 @@ class Cansat(object):
                 pass
             
     def odometry(self):
-        self.t1=time.time()
+        if self.t_new==0:
+            self.t_new=time.time()
+            
         self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
-        self.t2=time.time()
-        self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t2-self.t1,self.x,self.y,self.q)
         self.q=self.ex #加速度センサの値を姿勢角に使用
+        self.t_old=self.t_new
+        self.t_new=time.time()
+        self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t_new-self.t_old,self.x,self.y,self.q)
 
     def integ(self):#センサ統合用
         self.rightmotor.go(60)
@@ -446,26 +449,24 @@ class Cansat(object):
                         
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                            self.rightmotor.back(30)
-                            self.leftmotor.go(50)
+                            error = self.starttheta - self.ex
+                            ke = self.kp * error + self.v_ref_a
+                            if error < -180:
+                                error += 360
+                            elif error > 180:
+                                error -= 360
+                    
+                            if error > 0:
+                                self.rightmotor.go(ke)
+                                self.lefttmotor.back(ke)
+                            else:
+                                self.rightmotor.back(ke)
+                                self.lefttmotor.go(ke)
                            
                         else:#姿勢が変えらたら直進
-
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
-                            self.odometry()
-                        
-                if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                    self.rightmotor.back(30)
-                    self.leftmotor.go(30)
-                   
-                else:#姿勢が変えらたら直進
-
-                    self.rightmotor.go(self.v_ref)
-                    self.leftmotor.go(self.v_ref)
-                    self.odometry()
-                
-                    
+                            self.odometry()                  
                             
                 if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
                     self.state = 5
@@ -539,6 +540,7 @@ class Cansat(object):
                     self.measuringcount+=1#n点測量目
                     self.state = 6
                     self.laststate = 6
+                    self.t_new=0 #オドメトリで必要な初期化
             
     def caseDiscrimination(self):
         if self.x < 0 and self.y < ct.const.SHADOW_EDGE_LENGTH:
@@ -580,11 +582,11 @@ class Cansat(object):
     
     def running(self):
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
-            
             self.runningTime = time.time()
             self.RED_LED.led_on()
             self.BLUE_LED.led_on()
             self.GREEN_LED.led_on()
+            self.t_new=time.time()
         
         else:#Case判定  
             self.caseDiscrimination()#Case判定
