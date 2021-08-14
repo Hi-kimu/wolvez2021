@@ -521,7 +521,7 @@ class Cansat(object):
                 self.n_LogData.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
-                self.n_LogCansatRSSI.append(self.LogLostRSSI)
+                self.n_LogLostRSSI.append(self.LogLostRSSI)
                 
                 self.meanCansatRSSI=0
                 self.meanLostRSSI=0
@@ -618,6 +618,13 @@ class Cansat(object):
             if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
                 self.graph(self.n_pdf_sum)
+                
+                
+                with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+                    test.write(str(n_LogData) + '\n')
+                    test.write(str(n_LogCanSatRSSI) + '\n')
+                    test.write(str(n_LogLostRSSI) + '\n')
+                
                 self.state = 8
                 self.laststate = 8
             else:
