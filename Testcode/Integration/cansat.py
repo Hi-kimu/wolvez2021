@@ -55,13 +55,13 @@ class Cansat(object):
         self.startstate = 0
         
         #変数
-        self.state = 8
+        #self.state = 0
         self.laststate = 0
         self.landstate = 0
         self.k = 20 #for run 0 < error < 1
-        self.ke = 0.2 #for angle change 0 < error < 180 
+        self.ka = 0.2 #for angle change 0 < error < 180 
         self.v_ref = 90
-        self.v_ref_a = 10
+        self.v_ref_a = 20
         
         #基準点のGPS情報を取得
         self.gpscount=0
@@ -181,6 +181,8 @@ class Cansat(object):
         self.timer = 1000*(time.time() - self.startTime) #経過時間 (ms)
         self.timer = int(self.timer)
         self.gps.gpsread()
+        self.gps.Lat = 35.5549482
+        self.gps.Lon = 139.6560942
         self.bno055.bnoread()
         self.writeData()#txtファイルへのログの保存
     
@@ -191,7 +193,6 @@ class Cansat(object):
                 self.rightmotor.stop()
                 self.leftmotor.stop()
                 self.switchRadio()
-                pass
             
     def odometry(self):
         if self.t_new==0:
@@ -243,12 +244,12 @@ class Cansat(object):
                   + str(self.Ax).rjust(6) + ","\
                   + str(self.Ay).rjust(6) + ","\
                   + str(self.Az).rjust(6) + ","\
-                  + str(self.rightmotor.velocity).rjust(6) + ","\
-                  + str(self.leftmotor.velocity).rjust(6) + ","\
-                  + str(self.encoder.cansat_speed).rjust(6) + ","\
-                  + str(self.encoder.cansat_rad_speed).rjust(6) + ","\
-                  + str(self.x).rjust(6) + ","\
-                  + str(self.y).rjust(6) + ","\
+                  + str(round(self.rightmotor.velocity,3)).rjust(6) + ","\
+                  + str(round(self.leftmotor.velocity,3)).rjust(6) + ","\
+                  + str(round(self.encoder.cansat_speed,4)).rjust(6) + ","\
+                  + str(round(self.encoder.cansat_rad_speed,4)).rjust(6) + ","\
+                  + str(round(self.x,3)).rjust(6) + ","\
+                  + str(round(self.y,3)).rjust(6) + ","\
                   + str(self.ex).rjust(6) 
         
         with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
@@ -406,6 +407,8 @@ class Cansat(object):
                 
                 self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
                 self.starttheta=math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y,self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
+                if self.starttheta < 0:
+                    self.starttheta += 360
                 self.startstate=1
             else:
                 print("startpoint is "+ str(self.close_startpoint))
@@ -421,18 +424,20 @@ class Cansat(object):
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
                             error = self.starttheta - self.ex
-                            ke = self.kp * error + self.v_ref_a
+                            
                             if error < -180:
                                 error += 360
                             elif error > 180:
                                 error -= 360
-                    
-                            if error > 0:
+                            
+                            if error < 0:
+                                ke = self.ka * abs(error) + self.v_ref_a
                                 self.rightmotor.go(ke)
-                                self.lefttmotor.back(ke)
+                                self.leftmotor.back(ke)
                             else:
+                                ke = self.ka * abs(error) + self.v_ref_a
                                 self.rightmotor.back(ke)
-                                self.lefttmotor.go(ke)
+                                self.leftmotor.go(ke)
                                     
                         else:#姿勢が変えらたら直進
 
@@ -450,24 +455,26 @@ class Cansat(object):
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
                             error = self.starttheta - self.ex
-                            ke = self.kp * error + self.v_ref_a
+                            
                             if error < -180:
                                 error += 360
                             elif error > 180:
                                 error -= 360
-                    
-                            if error > 0:
+                            
+                            if error < 0:
+                                ke = self.ka * abs(error) + self.v_ref_a
                                 self.rightmotor.go(ke)
-                                self.lefttmotor.back(ke)
+                                self.leftmotor.back(ke)
                             else:
+                                ke = self.ka * abs(error) + self.v_ref_a
                                 self.rightmotor.back(ke)
-                                self.lefttmotor.go(ke)
+                                self.leftmotor.go(ke)
                            
                         else:#姿勢が変えらたら直進
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
                             self.odometry()                  
-                            
+                
                 if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
                     self.state = 5
                     self.laststate = 5
@@ -619,13 +626,14 @@ class Cansat(object):
         else:
             if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
-                self.graph(self.n_pdf_sum)
+                Estimation_Result=self.graph(self.n_pdf_sum)
                 
                 
                 with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
-                    test.write(str(n_LogData) + '\n')
-                    test.write(str(n_LogCanSatRSSI) + '\n')
-                    test.write(str(n_LogLostRSSI) + '\n')
+                    test.write(str(self.n_LogData) + '\n')
+                    test.write(str(self.n_LogCansatRSSI) + '\n')
+                    test.write(str(self.n_LogLostRSSI) + '\n')
+                    test.write(str(Estimation_Result) + '\n')
                 
                 
                 self.state = 8
@@ -642,6 +650,7 @@ class Cansat(object):
             self.RED_LED.led_off()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_off()
+            sys.exit()
         
     def pdf(self,xc,yc,r):
         w=3
@@ -653,7 +662,7 @@ class Cansat(object):
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
         print("Estimation Result:" + str(Zc))
         fig = plt.figure()
-        ax = Axes3D(fig)
+        ax = fig.add_subplot(111,projection="3d")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")
@@ -664,7 +673,12 @@ class Cansat(object):
         ax.set_zlim(0.0, 0.5)
         ax.view_init(30, 30)
         fig.colorbar(surf, shrink=0.5, aspect=5)
-        plt.show()
+        #plt.show()
+        name = str(self.filename_hm)
+        my_path = os.path.abspath('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
+        my_file = name + ".pdf"
+        fig.savefig(os.path.join(my_path, my_file))
+        return Zc
 
 if __name__ == "__main__":
     pass
