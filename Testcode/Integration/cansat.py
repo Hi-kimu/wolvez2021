@@ -60,7 +60,7 @@ class Cansat(object):
         self.landstate = 0
         self.k = 20 #for run 0 < error < 1
         self.ka = 0.2 #for angle change 0 < error < 180 
-        self.v_ref = 90
+        self.v_ref = 70
         self.v_ref_a = 20
         
         #基準点のGPS情報を取得
@@ -188,9 +188,9 @@ class Cansat(object):
         self.Ay=round(self.bno055.Ay,3)
         self.Az=round(self.bno055.Az,3)
         self.ex=round(self.bno055.ex,3)
-        self.ex -= 90
-        if self.ex < 0:
-            self.ex += 360
+#         self.ex -= 90
+#         if self.ex < 0:
+#             self.ex += 360
         
         self.writeData()#txtファイルへのログの保存
     
@@ -202,12 +202,12 @@ class Cansat(object):
                 self.leftmotor.stop()
                 self.switchRadio()
             
-    def odometry(self):
+    def odometri(self):
         if self.t_new==0:
             self.t_new=time.time()
             
         self.encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)#return self.encoder.cansat_speed, self.encoder.cansat_rad_speed
-        self.q=self.ex #加速度センサの値を姿勢角に使用
+        self.q=math.radians(self.ex) #加速度センサの値を姿勢角に使用
         self.t_old=self.t_new
         self.t_new=time.time()
         self.x,self.y,self.q=self.encoder.odometri(self.encoder.cansat_speed,self.encoder.cansat_rad_speed,self.t_new-self.t_old,self.x,self.y,self.q)
@@ -230,8 +230,8 @@ class Cansat(object):
                   + str(self.gps.Time) + ","\
                   + str(self.gps.Lat).rjust(6) + ","\
                   + str(self.gps.Lon).rjust(6) + ","\
-                  + "rV:" + str(self.rightmotor.velocity).rjust(6) + ","\
-                  + "lV:" + str(self.leftmotor.velocity).rjust(6) + ","\
+                  + "rV:" + str(round(self.rightmotor.velocity,2)).rjust(6) + ","\
+                  + "lV:" + str(round(self.leftmotor.velocity,2)).rjust(6) + ","\
                   + "x:" + str(round(self.x,2)).rjust(6) + ","\
                   + "y:" + str(round(self.y,2)).rjust(6) + ","\
                   + "q:" + str(self.ex).rjust(6) 
@@ -393,6 +393,7 @@ class Cansat(object):
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_on()
             self.startpointdis=list()
+            self.t_new=0
         else:#4つのスタート地点から一番近い点へ移動
             #原点と着陸地点の距離と方位角を取得
             if self.startstate==0:
@@ -444,7 +445,7 @@ class Cansat(object):
 
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
-                            self.odometry()
+                            self.odometri()
                 
                 elif self.close_startpoint==1 or self.close_startpoint==3:
                     if  self.startshadowTHRE[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE[self.close_startpoint][1]:
@@ -474,7 +475,7 @@ class Cansat(object):
                         else:#姿勢が変えらたら直進
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
-                            self.odometry()                  
+                            self.odometri()                  
                 
                 if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
                     self.state = 5
@@ -604,7 +605,7 @@ class Cansat(object):
                 
                 self.rightmotor.go(60)
                 self.leftmotor.go(80)
-                self.odometry()
+                self.odometri()
             else:
 
                 if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
@@ -614,7 +615,7 @@ class Cansat(object):
                         self.laststate = 5
                 else:
                     self.motor_run()
-                    self.odometry()
+                    self.odometri()
                         
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる

@@ -82,7 +82,7 @@ try:
         print("cansat rad speed :",cansat_rad_speed,"[rad/s]")
         print("cansat-x :",x,"[m]")
         print("cansat-y :",y,"[m]")
-        print("cansat-q :",q,"[rad]")
+        print("cansat-q :",math.degrees(q),"[deg]")
         
 # bno055.bnoread()
 # try:
