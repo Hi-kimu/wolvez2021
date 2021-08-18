@@ -181,9 +181,17 @@ class Cansat(object):
         self.timer = 1000*(time.time() - self.startTime) #経過時間 (ms)
         self.timer = int(self.timer)
         self.gps.gpsread()
-        self.gps.Lat = 35.5549482
-        self.gps.Lon = 139.6560942
+#         self.gps.Lat = 35.5549482
+#         self.gps.Lon = 139.6560942
         self.bno055.bnoread()
+        self.Ax=round(self.bno055.Ax,3)
+        self.Ay=round(self.bno055.Ay,3)
+        self.Az=round(self.bno055.Az,3)
+        self.ex=round(self.bno055.ex,3)
+        self.ex -= 90
+        if self.ex < 0:
+            self.ex += 360
+        
         self.writeData()#txtファイルへのログの保存
     
         if not self.state == 1: #preparingのときは電波を発しない
@@ -216,13 +224,6 @@ class Cansat(object):
         self.leftmotor.stop()
 
     def writeData(self):
-        self.Ax=round(self.bno055.Ax,3)
-        self.Ay=round(self.bno055.Ay,3)
-        self.Az=round(self.bno055.Az,3)
-        self.ex=round(self.bno055.ex,3)
-        self.ey=round(self.bno055.ey,3)
-        self.ez=round(self.bno055.ez,3)
-        
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
         print_datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
