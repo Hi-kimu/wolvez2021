@@ -57,7 +57,7 @@ class Cansat(object):
         #変数
         #self.state = 0
         self.laststate = 0
-        self.landstate = 0
+        
         self.k = 20 #for run 0 < error < 1
         self.ka = 0.2 #for angle change 0 < error < 180 
         self.v_ref = 70
@@ -159,9 +159,10 @@ class Cansat(object):
         self.lostrssi=list()
         
         #servomotor close
-        self.servomotor.servo_angle(0)
-        time.sleep(0.3)
-        self.servomotor.stop()
+#         self.servomotor.servo_angle(90)
+#         time.sleep(0.3)
+#         self.servomotor.stop()
+        
         
         if not os.path.isdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename)):
             os.mkdir('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
@@ -347,7 +348,8 @@ class Cansat(object):
             self.droppingTime = time.time()
             self.RED_LED.led_on()
             self.BLUE_LED.led_on()
-            self.GREEN_LED.led_off()         
+            self.GREEN_LED.led_off()
+            
       
         #加速度が小さくなったら着地判定
         if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.DROPPING_ACC_THRE,2):#加速度が閾値以下で着地判定
@@ -367,24 +369,27 @@ class Cansat(object):
         
         if not self.landingTime == 0:
             if self.landstate == 0:
-                self.servomotor.servo_angle(90)#サーボモータ動かしてパラ分離
+                self.servomotor.servo_angle(0)#サーボモータ動かしてパラ分離
+                
                 
                 if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
                     self.servomotor.stop()
-                    self.pre_motorTime = time.time()
+                    self.pre_motorBackTime = time.time()
                     self.landstate = 1
             #一定時間モータを回してパラシュートから離れる
             elif self.landstate == 1:
-                self.rightmotor.go(100)
-                self.leftmotor.go(100)
-
-                if time.time()-self.pre_motorTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE:
-                    self.rightmotor.stop()
-                    self.leftmotor.stop()
-                    self.state = 4
-                    self.laststate = 4
-                else:
-                    pass
+                if time.time()-self.pre_motorBackTime < ct.const.LANDING_PRE_MOTOR_TIME_THRE:
+                    self.rightmotor.back(100)
+                    self.leftmotor.back(70)
+                else:    
+                    self.rightmotor.go(100)
+                    self.leftmotor.go(100)
+                    if time.time()-self.pre_motorBackTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE*3:
+                        self.rightmotor.stop()
+                        self.leftmotor.stop()
+                        self.state = 4
+                        self.laststate = 4
+            
     
     def starting(self):
         if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -628,14 +633,14 @@ class Cansat(object):
         else:
             if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
-                Estimation_Result=self.graph(self.n_pdf_sum)
+                Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum)
                 
                 
                 with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
                     test.write(str(self.n_LogData) + '\n')
                     test.write(str(self.n_LogCansatRSSI) + '\n')
                     test.write(str(self.n_LogLostRSSI) + '\n')
-                    test.write(str(Estimation_Result) + '\n')
+                    test.write(str(Estimation_Result_x) + test.write(str(Estimation_Result_y) + '\n'))
                 
                 
                 self.state = 8
@@ -662,7 +667,9 @@ class Cansat(object):
         x = np.arange(-30, 31, 1)
         y = np.arange(-30, 31, 1)
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
-        print("Estimation Result:" + str(Zc))
+        x_est=x[Zc[1]]
+        y_est=y[Zc[0]]
+        print("Estimation Result:" +"(" + str(x_est)+","+str(y_est)+")")
         fig = plt.figure()
         ax = fig.add_subplot(111,projection="3d")
         ax.set_xlabel("x")
@@ -680,7 +687,8 @@ class Cansat(object):
         my_path = os.path.abspath('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
         my_file = name + ".pdf"
         fig.savefig(os.path.join(my_path, my_file))
-        return Zc
+        error = (x_est - 7 )**2 + (y_est - 6 )**2
+        return x_est, y_est
 
 if __name__ == "__main__":
     pass

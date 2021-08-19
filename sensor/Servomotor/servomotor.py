@@ -12,7 +12,7 @@ class servomotor():
     def servo_angle(self,angle):
         duty = 2.5 + (12.0 - 2.5) * (angle + 90) / 180   #角度からデューティ比を求める
         self.pwm.ChangeDutyCycle(duty)     #デューティ比を変更
-        time.sleep(0.3)
+#         time.sleep(0.3)
         
     def stop(self):
         self.pwm.stop()
