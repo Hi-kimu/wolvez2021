@@ -55,7 +55,7 @@ class Cansat(object):
         self.startstate = 0
         
         #変数
-        self.state = 8
+        self.state = 6
         self.laststate = 0
         self.landstate = 0
         self.k = 20 #for run 0 < error < 1
