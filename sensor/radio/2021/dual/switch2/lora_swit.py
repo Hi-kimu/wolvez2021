@@ -38,7 +38,7 @@ class LoraSwitClass:
                             print(rssi)
                             # 受信フレーム
 #                             data = log_list[1][:-3]
-                            data = float(log_list[1][0:-32])
+                            data = float(log_list[1][0:-3])
                             print(data)
                             time.sleep(1)
                             #senddata

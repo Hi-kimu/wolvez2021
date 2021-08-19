@@ -9,11 +9,16 @@ import constant as ct
 
 can=cansat.Cansat()
 can.setup()
+can.state = 5
 GPIO.setwarnings(False)
 
 try:
     while True:
+<<<<<<< HEAD
 #         can.integ()
+=======
+        #can.integ()
+>>>>>>> 5ab9fb7d062a75cde5964984cc920853075b0659
         can.sensor()
         time.sleep(0.05)
         can.sequence()
