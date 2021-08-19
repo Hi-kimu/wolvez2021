@@ -21,9 +21,14 @@ try:
 #             time.sleep(0.1)
         
         
-    Motor1.go(60)
-    Motor2.go(60)
-    time.sleep(100)
+    Motor1.back(100)
+    Motor2.back(70)
+    time.sleep(2)
+    
+    Motor1.go(100)
+    Motor2.go(100)
+    time.sleep(10)
+    
 #     
 #  #   Motor1.back(85)
 # #   Motor2.back(85)
