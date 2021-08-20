@@ -67,7 +67,8 @@ class radio(object):
                 if line.find('RSSI') >= 0 and line.find('information') == -1:
 
                     log = line
-                    log_list = log.split('dBm):PAN ID(0001):Src ID(0001):Receive Data(')
+#                     print(line)
+                    log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
     #                     log_list = re.split('dBm|):Receive Data(',log)
                     
                     ##self.cansat_rssi = int(log_list[0][5:8])#0-4
