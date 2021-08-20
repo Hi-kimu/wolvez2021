@@ -77,22 +77,21 @@ class Cansat(object):
         #self.startlon=139.6559749
         #self.startlat=35.5549795
         
-        self.realshadow=[[0,0],#永久影の設定15×15
-                         [0,ct.const.SHADOW_EDGE_LENGTH],
-                         [ct.const.SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH],
-                         [ct.const.SHADOW_EDGE_LENGTH,0]]
-        self.shadow=[[-ct.const.MAX_SHADOW_EDGE_LENGTH,-ct.const.MAX_SHADOW_EDGE_LENGTH],#拡張永久影の設定25×25
-                     [-ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
-                     [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
-                     [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,-ct.const.MAX_SHADOW_EDGE_LENGTH]]
-        self.startpoint=[[-ct.const.MAX_SHADOW_EDGE_LENGTH,ct.const.SHADOW_EDGE_LENGTH/2],#スタート地点の設定
-                         [ct.const.SHADOW_EDGE_LENGTH/2,ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
-                         [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,2/ct.const.SHADOW_EDGE_LENGTH],
-                         [ct.const.SHADOW_EDGE_LENGTH/2,-ct.const.MAX_SHADOW_EDGE_LENGTH]]
-        self.startshadowTHRE=[[-10,-5],#スタート地点の許容範囲[-10<x<-5 20<y<25 20<x<25 -10<y<-5]
-                              [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,25],
-                              [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH,25],
-                              [-10,-5]]
+        #永久影の設定15×15
+        self.startpoint=[[-ct.const.MAX_SHADOW_EDGE_LENGTH                             , ct.const.SHADOW_EDGE_LENGTH/2],#スタート地点の設定
+                         [ct.const.SHADOW_EDGE_LENGTH/2                                , ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH],
+                         [ct.const.SHADOW_EDGE_LENGTH + ct.const.MAX_SHADOW_EDGE_LENGTH, ct.const.SHADOW_EDGE_LENGTH/2],
+                         [ct.const.SHADOW_EDGE_LENGTH/2                                , -ct.const.MAX_SHADOW_EDGE_LENGTH]]
+        #スタート地点の許容範囲[- 5 - 0.5 < x < - 5 + 0.5...]
+        self.startshadowTHRE_x=[[self.startpoint[0][0] - ct.const.START_CONST_SHORT, self.startpoint[0][0] + ct.const.START_CONST_SHORT],
+                                [self.startpoint[1][0] - ct.const.START_CONST_LONG , self.startpoint[1][0] + ct.const.START_CONST_LONG],
+                                [self.startpoint[2][0] - ct.const.START_CONST_SHORT, self.startpoint[2][0] + ct.const.START_CONST_SHORT],
+                                [self.startpoint[3][0] - ct.const.START_CONST_LONG , self.startpoint[3][0] + ct.const.START_CONST_LONG]]
+        #スタート地点の許容範囲[7.5 - 5 < y < 7.5 + 5...]
+        self.startshadowTHRE_y=[[self.startpoint[0][1] - ct.const.START_CONST_LONG , self.startpoint[0][1] + ct.const.START_CONST_LONG],
+                                [self.startpoint[1][1] - ct.const.START_CONST_SHORT, self.startpoint[1][1] + ct.const.START_CONST_SHORT],
+                                [self.startpoint[2][1] - ct.const.START_CONST_LONG , self.startpoint[2][1] + ct.const.START_CONST_LONG],
+                                [self.startpoint[3][1] - ct.const.START_CONST_SHORT, self.startpoint[3][1] + ct.const.START_CONST_SHORT]]
         self.close_startpoint=-1
         self.starttheta=0
         self.startpointdis=list()
@@ -354,6 +353,8 @@ class Cansat(object):
         #加速度が小さくなったら着地判定
         if (pow(self.bno055.Ax,2) + pow(self.bno055.Ay,2) + pow(self.bno055.Az,2)) < pow(ct.const.DROPPING_ACC_THRE,2):#加速度が閾値以下で着地判定
             self.countDropLoop+=1
+            self.servomotor.servo_angle(90)#サーボモータ動かしてパラ分離
+            
             if self.countDropLoop > ct.const.DROPPING_ACC_COUNT_THRE:
                 self.state = 3
                 self.laststate = 3
@@ -408,80 +409,43 @@ class Cansat(object):
                 self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
                 self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
                 
-            
                 for i in range(4):
                     self.startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
                 
                 self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
-                self.starttheta=math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y,self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
-                if self.starttheta < 0:
-                    self.starttheta += 360
                 self.startstate=1
             else:
                 print("startpoint is "+ str(self.close_startpoint))
                 print("start angle is "+ str(self.starttheta))
+                self.starttheta = math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y, self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
+                if self.starttheta < 0:
+                    self.starttheta += 360
+                error = self.starttheta - self.ex
+                
+                if error < -180:
+                    error += 360
+                elif error > 180:
+                    error -= 360                    
+                ke = self.ka *error
+                
+                print("目標範囲:"+ \
+                      str(self.startshadowTHRE_x[self.close_startpoint][0]) + "< x <" str(self.startshadowTHRE_x[self.close_startpoint][1]) \
+                      str(self.startshadowTHRE_y[self.close_startpoint][0]) + "< y <" str(self.startshadowTHRE_y[self.close_startpoint][1]))
+                
                 #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
-                if self.close_startpoint==0 or self.close_startpoint==2:
-                    if  self.startshadowTHRE[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE[self.close_startpoint][1]:
-                        self.rightmotor.stop()
-                        self.leftmotor.stop()
-                        self.state = 5
-                        self.laststate = 5
-                        
-                    else:
-                        if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                            error = self.starttheta - self.ex
-                            
-                            if error < -180:
-                                error += 360
-                            elif error > 180:
-                                error -= 360
-                            
-                            if error < 0:
-                                ke = self.ka * abs(error) + self.v_ref_a
-                                self.rightmotor.go(ke)
-                                self.leftmotor.back(ke)
-                            else:
-                                ke = self.ka * abs(error) + self.v_ref_a
-                                self.rightmotor.back(ke)
-                                self.leftmotor.go(ke)
-                                    
-                        else:#姿勢が変えらたら直進
+                if self.startshadowTHRE_x[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE_x[self.close_startpoint][1] \
+                   self.startshadowTHRE_y[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE_y[self.close_startpoint][1]:
+                    
+                    self.rightmotor.stop()
+                    self.leftmotor.stop()
+                                         
+                    self.state = 5
+                    self.laststate = 5
+                
+                else:
+                    self.rightmotor.go(self.v_ref - ke)
+                    self.leftmotor.go(self.v_ref + ke)
 
-                            self.rightmotor.go(self.v_ref)
-                            self.leftmotor.go(self.v_ref)
-                            self.odometri()
-                
-                elif self.close_startpoint==1 or self.close_startpoint==3:
-                    if  self.startshadowTHRE[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE[self.close_startpoint][1]:
-                        self.rightmotor.stop()
-                        self.leftmotor.stop()
-                        self.state = 5
-                        self.laststate = 5
-                        
-                    else:
-                        if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
-                            error = self.starttheta - self.ex
-                            
-                            if error < -180:
-                                error += 360
-                            elif error > 180:
-                                error -= 360
-                            
-                            if error < 0:
-                                ke = self.ka * abs(error) + self.v_ref_a
-                                self.rightmotor.go(ke)
-                                self.leftmotor.back(ke)
-                            else:
-                                ke = self.ka * abs(error) + self.v_ref_a
-                                self.rightmotor.back(ke)
-                                self.leftmotor.go(ke)
-                           
-                        else:#姿勢が変えらたら直進
-                            self.rightmotor.go(self.v_ref)
-                            self.leftmotor.go(self.v_ref)
-                            self.odometri()                  
-                
                 if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
                     self.state = 5
                     self.laststate = 5
@@ -557,13 +521,13 @@ class Cansat(object):
                     self.t_new=0 #オドメトリで必要な初期化
             
     def caseDiscrimination(self):
-        if self.x < 0 and self.y < ct.const.SHADOW_EDGE_LENGTH:
+        if self.x < - ct.const.CASE_DISCRIMINATION and self.y < ct.const.SHADOW_EDGE_LENGTH + ct.const.CASE_DISCRIMINATION:
             self.case=0
-        elif self.x < ct.const.SHADOW_EDGE_LENGTH and self.y > ct.const.SHADOW_EDGE_LENGTH:
+        elif self.x < ct.const.SHADOW_EDGE_LENGTH + ct.const.CASE_DISCRIMINATION and self.y > ct.const.SHADOW_EDGE_LENGTH + ct.const.CASE_DISCRIMINATION :
             self.case=1
-        elif self.x > ct.const.SHADOW_EDGE_LENGTH and self.y > 0:
+        elif self.x > ct.const.SHADOW_EDGE_LENGTH + ct.const.CASE_DISCRIMINATION and self.y > - ct.const.CASE_DISCRIMINATION:
             self.case=2
-        elif self.x > 0 and self.y < 0:
+        elif self.x > - ct.const.CASE_DISCRIMINATION and self.y < -ct.const.CASE_DISCRIMINATION:
             self.case=3
         else:#永久影に入っちゃっている場合
             self.case=4
@@ -634,17 +598,26 @@ class Cansat(object):
             if self.positioning_count == self.measuringcount:
                 self.n_pdf_sum=sum(self.n_pdf)
                 Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum)
+                #絶対座標
+                print("絶対座標(x,y):" +"(" + str(Estimation_Result_x)+","+str(Estimation_Result_y)+")")
                 
+                #最終地点との相対座標
+                Rel_Estimation_Result_r = math.sqrt((Estimation_Result_x - self.x)**2 + (Estimation_Result_y - self.y))
+                Rel_Estimation_Result_q = math.degrees(math.atan2(Estimation_Result_y - self.y, Estimation_Result_x - self.x))
+                print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
                 
+                lastdata = str(self.n_LogData) + '\n'
+                    str(self.n_LogCansatRSSI) + '\n'
+                    str(self.n_LogLostRSSI) + '\n'
+                    "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) "," + str(Estimation_Result_y) + ")" + '\n'
+                    "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) "," + str(Rel_Estimation_Result_q) + ")" + '\n'
+                    
                 with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
-                    test.write(str(self.n_LogData) + '\n')
-                    test.write(str(self.n_LogCansatRSSI) + '\n')
-                    test.write(str(self.n_LogLostRSSI) + '\n')
-                    test.write(str(Estimation_Result_x) + test.write(str(Estimation_Result_y) + '\n'))
-                
+                    test.write(lastdata)
                 
                 self.state = 8
                 self.laststate = 8
+                
             else:
                 self.n_pdf.append(self.pdf(self.n_LogData[self.positioning_count][1],
                                       self.n_LogData[self.positioning_count][2],
@@ -669,7 +642,6 @@ class Cansat(object):
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
         x_est=x[Zc[1]]
         y_est=y[Zc[0]]
-        print("Estimation Result:" +"(" + str(x_est)+","+str(y_est)+")")
         fig = plt.figure()
         ax = fig.add_subplot(111,projection="3d")
         ax.set_xlabel("x")
@@ -687,7 +659,8 @@ class Cansat(object):
         my_path = os.path.abspath('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
         my_file = name + ".pdf"
         fig.savefig(os.path.join(my_path, my_file))
-        error = (x_est - 7 )**2 + (y_est - 6 )**2
+        error = math.sqrt((x_est - 7 )**2 + (y_est - 6 )**2) #探索機が(7,6)の場合
+        print("error:" + str(error) + "m" )
         return x_est, y_est
 
 if __name__ == "__main__":
