@@ -66,17 +66,31 @@ class radio(object):
 
                 if line.find('RSSI') >= 0 and line.find('information') == -1:
 
-                    log = line
-#                     print(line)
-                    log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
+                    log = line.rstrip()
+                    print(line)
+                    log_list = log.split(':')
+                    print(log_list)
+                
     #                     log_list = re.split('dBm|):Receive Data(',log)
                     
                     ##self.cansat_rssi = int(log_list[0][5:8])#0-4
-                    self.cansat_rssi = float(log_list[0][5:])#0-4
+                    self.cansat_rssi = float(log_list[0][5:-4])#0-4
                     #self.cansat_rssi = log_list[0][5:11]#0-4
 
-                    #self.lost_rssi = float(log_list[1][0:-32])#1-最後から3番目の1個前まで
-                    self.lost_rssi = float(log_list[1][0:-3])
+                    #self.lost_rssi = float(log_list[1][0:-2])#1-最後から3番目の1個前まで
+                    self.lost_rssi = float(log_list[3][13:-1])
+                    print(self.cansat_rssi)
+                    print(self.lost_rssi)
+                    
+#                     log_list = log.split('dBm):PAN ID(0001):Src ID(0000):Receive Data(')
+#     #                     log_list = re.split('dBm|):Receive Data(',log)
+#                     
+#                     ##self.cansat_rssi = int(log_list[0][5:8])#0-4
+#                     self.cansat_rssi = float(log_list[0][5:])#0-4
+#                     #self.cansat_rssi = log_list[0][5:11]#0-4
+# 
+#                     #self.lost_rssi = float(log_list[1][0:-32])#1-最後から3番目の1個前まで
+#                     self.lost_rssi = float(log_list[1][0:-3])
 
                     #print('Receive'+ data)
                     #print('-------------')

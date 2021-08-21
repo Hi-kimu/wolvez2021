@@ -415,11 +415,13 @@ class Cansat(object):
                 self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
                 self.startstate=1
             else:
-                print("startpoint is "+ str(self.close_startpoint))
-                print("start angle is "+ str(self.starttheta))
                 self.starttheta = math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y, self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
                 if self.starttheta < 0:
                     self.starttheta += 360
+                
+                print("startpoint is "+ str(self.close_startpoint))
+                print("start angle is "+ str(self.starttheta))
+                
                 error = self.starttheta - self.ex
                 
                 if error < -180:
@@ -429,11 +431,11 @@ class Cansat(object):
                 ke = self.ka *error
                 
                 print("目標範囲:"+ \
-                      str(self.startshadowTHRE_x[self.close_startpoint][0]) + "< x <" str(self.startshadowTHRE_x[self.close_startpoint][1]) \
-                      str(self.startshadowTHRE_y[self.close_startpoint][0]) + "< y <" str(self.startshadowTHRE_y[self.close_startpoint][1]))
+                      str(self.startshadowTHRE_x[self.close_startpoint][0]) + "< x <" + str(self.startshadowTHRE_x[self.close_startpoint][1])+ \
+                      str(self.startshadowTHRE_y[self.close_startpoint][0]) + "< y <" + str(self.startshadowTHRE_y[self.close_startpoint][1]))
                 
                 #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
-                if self.startshadowTHRE_x[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE_x[self.close_startpoint][1] \
+                if self.startshadowTHRE_x[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE_x[self.close_startpoint][1] and \
                    self.startshadowTHRE_y[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE_y[self.close_startpoint][1]:
                     
                     self.rightmotor.stop()
@@ -606,11 +608,11 @@ class Cansat(object):
                 Rel_Estimation_Result_q = math.degrees(math.atan2(Estimation_Result_y - self.y, Estimation_Result_x - self.x))
                 print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
                 
-                lastdata = str(self.n_LogData) + '\n'
-                    str(self.n_LogCansatRSSI) + '\n'
-                    str(self.n_LogLostRSSI) + '\n'
-                    "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) "," + str(Estimation_Result_y) + ")" + '\n'
-                    "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) "," + str(Rel_Estimation_Result_q) + ")" + '\n'
+                lastdata = str(self.n_LogData) + '\n' \
+                    + str(self.n_LogCansatRSSI) + '\n' \
+                    + str(self.n_LogLostRSSI) + '\n' \
+                    + "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) + "," + str(Estimation_Result_y) + ")" + '\n'\
+                    + "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) + "," + str(Rel_Estimation_Result_q) + ")" + '\n'
                     
                 with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
                     test.write(lastdata)
