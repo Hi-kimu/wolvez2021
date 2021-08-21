@@ -10,13 +10,13 @@ try:
     #while True:
     print("servomotor run")
 
-    servomotor.servo_angle(100)#CLOSE
+    servomotor.servo_angle(30)#CLOSE
     time.sleep(0.3)
     #servomotor.servo_angle(0)#OPEN
 #     time.sleep(0.3)
     servomotor.stop()
     
 except KeyboardInterrupt:
+    servomotor.stop()
     GPIO.cleanup()
     #servomotor.servo_angle(0) 
-    servomotor.stop()
