@@ -9,7 +9,7 @@ import constant as ct
 
 can=cansat.Cansat()
 can.setup()
-can.state = 5
+can.state = 0
 GPIO.setwarnings(False)
 
 try:
@@ -26,5 +26,4 @@ except KeyboardInterrupt:
     can.leftmotor.stop()
     GPIO.cleanup()
     pass
-
-
+wsq

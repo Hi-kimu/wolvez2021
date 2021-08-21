@@ -225,6 +225,7 @@ class Cansat(object):
 
     def writeData(self):
         #ログデータ作成。\マークを入れることで改行してもコードを続けて書くことができる
+                 
         print_datalog = str(self.timer) + ","\
                   + str(self.state) + ","\
                   + str(self.gps.Time) + ","\
@@ -251,8 +252,10 @@ class Cansat(object):
                   + str(round(self.encoder.cansat_rad_speed,4)).rjust(6) + ","\
                   + str(round(self.x,3)).rjust(6) + ","\
                   + str(round(self.y,3)).rjust(6) + ","\
-                  + str(self.ex).rjust(6) 
-        
+                  + str(self.ex).rjust(6) + ","\
+                  + str(self.startstate)+ ","\
+                  + str(self.case)
+            
         with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
             test.write(datalog + '\n')
         
@@ -334,6 +337,14 @@ class Cansat(object):
                 
         if GPIO.input(ct.const.FLIGHTPIN_PIN) == GPIO.HIGH:#highかどうか＝フライトピンが外れているかチェック
             self.countFlyLoop+=1
+            print(self.countFlyLoop)
+            
+#             # change
+#             print(" stop for writing")
+#             aaaaa = input()
+#             self.state = 3
+            
+            
             if self.countFlyLoop > ct.const.FLYING_FLIGHTPIN_COUNT_THRE:#一定時間HIGHだったらステート移行
                 self.state = 2
                 self.laststate = 2
@@ -415,7 +426,14 @@ class Cansat(object):
                 self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
                 self.startstate=1
             else:
+                self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
+                #極座標から直交座標へ変換
+                self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+                print(f"now x:{self.x}, y:{self.y}")
                 self.starttheta = math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y, self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
+                print(f"dist x:{self.startpoint[self.close_startpoint][0]}, y:{self.startpoint[self.close_startpoint][1]}")
                 if self.starttheta < 0:
                     self.starttheta += 360
                 
@@ -427,7 +445,9 @@ class Cansat(object):
                 if error < -180:
                     error += 360
                 elif error > 180:
-                    error -= 360                    
+                    error -= 360
+                
+                print(f"error: {error}")
                 ke = self.ka *error
                 
                 print("目標範囲:"+ \
