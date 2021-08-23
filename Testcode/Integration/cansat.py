@@ -121,7 +121,7 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
-        self.hazure = 5
+        self.hazure = 3
         
         #探査機推定時用の変数
         self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
@@ -265,7 +265,9 @@ class Cansat(object):
         with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
             writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
             writer.writerow(self.n_LogData) # csvファイルに書き込み
-    
+            writer.writerow(self.n_LogCansatRSSI)
+            writer.writerow(self.n_LogLostRSSI)
+            
     def sendRadio(self):
         datalog = str(self.state) + ","\
                   + str(self.gps.Time) + ","\
@@ -393,10 +395,14 @@ class Cansat(object):
         
         if not self.landingTime == 0:
             if self.landstate == 0:
-                self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
-                time.sleep(0.05)
-                self.servomotor.servo_angle(-100)
-                
+                for i in range(5):
+                    self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
+                    time.sleep(0.05)
+                self.servomotor.servo_angle(100)
+                for i in range(5):
+                    self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
+                    time.sleep(0.05)
+                    
                 if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
                     self.servomotor.stop()
                     self.pre_motorBackTime = time.time()
@@ -416,7 +422,87 @@ class Cansat(object):
                         self.leftmotor.stop()
                         self.state = 4
                         self.laststate = 4
-            
+                        
+                      
+    def starting(self):
+        if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+            self.startingTime = time.time()
+            self.RED_LED.led_on()
+            self.BLUE_LED.led_off()
+            self.GREEN_LED.led_on()
+            self.startpointdis=list()
+            self.t_new=0
+        else:#4つのスタート地点から一番近い点へ移動
+            #原点と着陸地点の距離と方位角を取得
+            if self.startstate==0:
+                self.x_rec = []
+                self.y_rec = []
+                for i in range(0, ct.const.PREPARING_GPS_COUNT_THRE):
+                    self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                    #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
+                    #極座標から直交座標へ変換
+                    self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                    self.x_rec.append(self.x)
+                    self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+                    self.y_rec.append(self.y)
+                self.x = np.mean(self.x_rec)
+                self.y = np.mean(self.y_rec)
+#                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+#                 #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
+#                 #極座標から直交座標へ変換
+#                 self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+#                 self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+#                 
+                for i in range(4):
+                    self.startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
+                
+                self.close_startpoint=self.startpointdis.index(min(self.startpointdis))#0~3の中で一番近いスタート地点のインデックスを格納
+                self.startstate=1
+            else:
+                print(f"now x:{self.x}, y:{self.y}")
+                self.starttheta = math.degrees(math.atan2(self.startpoint[self.close_startpoint][1] - self.y, self.startpoint[self.close_startpoint][0] - self.x))#スタート地点までの角度を計算
+                print(f"dist x:{self.startpoint[self.close_startpoint][0]}, y:{self.startpoint[self.close_startpoint][1]}")
+                if self.starttheta < 0:
+                    self.starttheta += 360
+                
+                print("startpoint is "+ str(self.close_startpoint))
+                print("start angle is "+ str(self.starttheta))
+                
+                error = self.starttheta - self.ex
+                
+                if error < -180:
+                    error += 360
+                elif error > 180:
+                    error -= 360
+                
+                print(f"error: {error}")
+                ke = self.ka *error
+                
+                print("目標範囲:"+ \
+                      str(self.startshadowTHRE_x[self.close_startpoint][0]) + "< x <" + str(self.startshadowTHRE_x[self.close_startpoint][1])+ \
+                      str(self.startshadowTHRE_y[self.close_startpoint][0]) + "< y <" + str(self.startshadowTHRE_y[self.close_startpoint][1]))
+                
+                #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
+                if self.startshadowTHRE_x[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE_x[self.close_startpoint][1] and \
+                   self.startshadowTHRE_y[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE_y[self.close_startpoint][1]:
+                    
+                    self.rightmotor.stop()
+                    self.leftmotor.stop()
+                                         
+                    self.state = 5
+                    self.laststate = 5
+                
+                else:
+                    self.rightmotor.go(self.v_ref - ke)
+                    self.leftmotor.go(self.v_ref + ke)
+                    self.odometri()
+
+                if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
+                    self.state = 5
+                    self.laststate = 5
+                    #self.startstate=0
+                    pass
+                 
     """
     def starting(self):
         if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -490,6 +576,8 @@ class Cansat(object):
                     pass
                 
     """
+    '''
+#0823
     def starting(self):
         if self.startingTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.startingTime = time.time()
@@ -500,12 +588,24 @@ class Cansat(object):
         else:#4つのスタート地点から一番近い点へ移動
             #原点と着陸地点の距離と方位角を取得
             if self.startstate==0:
-                self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
-                #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
-                #極座標から直交座標へ変換
-                self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
-                self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
-                
+#                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+#                 #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
+#                 #極座標から直交座標へ変換
+#                 self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+#                 self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+#                 
+                self.x_rec = []
+                self.y_rec = []
+                for i in range(10):
+                    self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                    #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
+                    #極座標から直交座標へ変換
+                    self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                    self.x_rec.append(self.x)
+                    self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+                    self.y_rec.append(self.y)
+                self.x = np.mean(self.x_rec)
+                self.y = np.mean(self.y_rec)
             
                 for i in range(4):
                     self.startpointdis.append(math.sqrt((self.x - self.startpoint[i][0])**2 + (self.y - self.startpoint[i][1])**2))
@@ -518,7 +618,7 @@ class Cansat(object):
                 print("start angle is "+ str(self.starttheta))
                 #選択したスタート地点に向かって直進し，大体近づいたら次のステートへ
                 if self.close_startpoint==0 or self.close_startpoint==2:
-                    if  self.startshadowTHRE[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE[self.close_startpoint][1]:
+                    if  self.startshadowTHRE_x[self.close_startpoint][0] < self.x  and self.x < self.startshadowTHRE_x[self.close_startpoint][1]:
                         self.rightmotor.stop()
                         self.leftmotor.stop()
                         self.state = 5
@@ -527,7 +627,8 @@ class Cansat(object):
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
                             error = self.starttheta - self.ex
-                            ke = self.kp * error + self.v_ref_a
+#                             ke = self.kp * error + self.v_ref_a
+                            ke = self.ka *error
                             if error < -180:
                                 error += 360
                             elif error > 180:
@@ -544,10 +645,10 @@ class Cansat(object):
 
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
-                            self.odometry()
+                            self.odometri()
                 
                 elif self.close_startpoint==1 or self.close_startpoint==3:
-                    if  self.startshadowTHRE[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE[self.close_startpoint][1]:
+                    if  self.startshadowTHRE_y[self.close_startpoint][0] < self.y  and self.y < self.startshadowTHRE_y[self.close_startpoint][1]:
                         self.rightmotor.stop()
                         self.leftmotor.stop()
                         self.state = 5
@@ -556,7 +657,8 @@ class Cansat(object):
                     else:
                         if math.fabs(self.ex - self.starttheta) > ct.const.ANGLE_THRE:#一番近いスタート地点に向けて姿勢を変更
                             error = self.starttheta - self.ex
-                            ke = self.kp * error + self.v_ref_a
+#                             ke = self.kp * error + self.v_ref_a
+                            ke = self.ka *error
                             if error < -180:
                                 error += 360
                             elif error > 180:
@@ -572,7 +674,7 @@ class Cansat(object):
                         else:#姿勢が変えらたら直進
                             self.rightmotor.go(self.v_ref)
                             self.leftmotor.go(self.v_ref)
-                            self.odometry()                  
+                            self.odometri()                  
                             
                 if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
                     self.state = 5
@@ -580,7 +682,7 @@ class Cansat(object):
                     #self.startstate=0
                     pass
 
-    
+    '''
     def measuring(self):
         print("measuring count is "+str(self.measuringcount))
         if self.measureringTimeLog == list():#時刻を取得してLEDをステートに合わせて光らせる
@@ -592,7 +694,7 @@ class Cansat(object):
             self.leftmotor.stop()
             
             if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
-          
+         
                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
                 #極座標から直交座標へ変換
                 self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
