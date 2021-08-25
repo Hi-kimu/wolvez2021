@@ -121,7 +121,7 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
-        self.hazure = 3
+        self.hazure = 10
         
         #探査機推定時用の変数
         self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
@@ -404,10 +404,10 @@ class Cansat(object):
                 for i in range(5):
                     self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
                     time.sleep(0.05)
-                self.servomotor.servo_angle(100)
-                for i in range(5):
-                    self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
-                    time.sleep(0.05)
+#                 self.servomotor.servo_angle(100)
+#                 for i in range(5):
+#                     self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
+#                     time.sleep(0.05)
                     
                 if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
                     self.servomotor.stop()
@@ -650,6 +650,11 @@ class Cansat(object):
                 else:
                     self.LogCansatRSSI.append(self.radio.cansat_rssi)
                     self.LogLostRSSI.append(self.radio.lost_rssi)
+                    self.distanceCansat=self.radio.estimate_distance_Cansat(self.radio.cansat_rssi)
+                    self.distanceLost=self.radio.estimate_distance_Lost(self.radio.lost_rssi)
+                    print(f"カンサット推定距離:{self.distanceCansat},ロスト機推定距離:{self.distanceLost}")
+                    
+                    
                     self.countSwitchLoop+=1
             else:
                 print("RSSIのlist_before:",self.LogCansatRSSI)
@@ -678,6 +683,7 @@ class Cansat(object):
                 #距離推定
                 self.distanceCansatRSSI=self.radio.estimate_distance_Cansat(self.meanCansatRSSI)
                 self.distanceLostRSSI=self.radio.estimate_distance_Lost(self.meanLostRSSI)
+                
                 print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
                 print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
                 self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
@@ -694,9 +700,9 @@ class Cansat(object):
                 
                 with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
                     writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
-                    writer.writerow(self.n_LogData) # csvファイルに書き込み
-                    writer.writerow(self.n_LogCansatRSSI)
-                    writer.writerow(self.n_LogLostRSSI)
+                    writer.writerow(self.LogData) # csvファイルに書き込み
+                    writer.writerow(self.LogCansatRSSI)
+                    writer.writerow(self.LogLostRSSI)
                   
                 
                 self.meanCansatRSSI=0
