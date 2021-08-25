@@ -121,7 +121,7 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
-        self.hazure = 10
+        self.hazure = 5
         
         #探査機推定時用の変数
         self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
