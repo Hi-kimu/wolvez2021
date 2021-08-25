@@ -25,7 +25,7 @@ const.FLIGHTPIN_PIN = 4
 const.ANGLE_THRE = 10
 const.SHADOW_EDGE_LENGTH = 15
 const.MEASURMENT_INTERVAL = 5 #測位点間距離
-const.MAX_SHADOW_EDGE_LENGTH = 
+const.MAX_SHADOW_EDGE_LENGTH = 8
 const.CASE_DISCRIMINATION = 1 #Case判定における許容誤差
 const.START_CONST_SHORT = 0.5 #Startingステートにおける帯の幅　±0.5
 const.START_CONST_LONG = 5 #Startingステートにおける帯の幅　±5
@@ -34,7 +34,7 @@ const.START_CONST_LONG = 5 #Startingステートにおける帯の幅　±5
 #State Threshold
 const.PREPARING_GPS_COUNT_THRE= 50
 const.PREPARING_TIME_THRE = 60#150
-const.FLYING_FLIGHTPIN_COUNT_THRE = 50#800
+const.FLYING_FLIGHTPIN_COUNT_THRE = 10#800
 const.DROPPING_ACC_COUNT_THRE = 50
 const.DROPPING_ACC_THRE = 1 #加速度の値
 const.LANDING_RELEASING_TIME_THRE = 3

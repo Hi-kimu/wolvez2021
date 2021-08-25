@@ -285,7 +285,6 @@ class Cansat(object):
     
     def sequence(self):
         if self.state == 0:
-       
             self.preparing()
         elif self.state == 1:
             self.flying()
@@ -401,13 +400,12 @@ class Cansat(object):
         
         if not self.landingTime == 0:
             if self.landstate == 0:
+#                 for i in range(0,10):
+#                     self.servomotor.servo_angle(-10-10*i)#サーボモータ動かしてパラ分離
+#                     time.sleep(0.1)
                 for i in range(5):
                     self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
                     time.sleep(0.05)
-#                 self.servomotor.servo_angle(100)
-#                 for i in range(5):
-#                     self.servomotor.servo_angle(-100)#サーボモータ動かしてパラ分離
-#                     time.sleep(0.05)
                     
                 if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
                     self.servomotor.stop()
@@ -418,7 +416,7 @@ class Cansat(object):
                 if time.time()-self.pre_motorBackTime < ct.const.LANDING_PRE_MOTOR_TIME_THRE:
                     pass
 #                     self.rightmotor.back(100)
-#                     self.leftmotor.back(70)
+#                     self.leftmotor.back(50)
 
                 else:    
                     self.rightmotor.go(100)
