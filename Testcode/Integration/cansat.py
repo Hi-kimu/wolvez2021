@@ -114,7 +114,7 @@ class Cansat(object):
         self.meanLostRSSI=0
         self.LogData = list()
         self.n_LogData = list()
-        self.n_LogData_all = list()
+#         self.n_LogData_all = list()
         self.LogCansatRSSI=list()
         self.LogLostRSSI=list()
         self.n_dis_LogCansatRSSI=list()
@@ -122,7 +122,7 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
-        self.hazure = 10
+        self.hazure = 5
         
         #探査機推定時用の変数
         self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
@@ -417,20 +417,23 @@ class Cansat(object):
             elif self.landstate == 1:
                 if time.time()-self.pre_motorBackTime < ct.const.LANDING_PRE_MOTOR_TIME_THRE:
 #                     pass
-#                     self.rightmotor.back(100)
-#                     self.leftmotor.back(70)
-                    self.rightmotor.go(100)
-                    self.leftmotor.go(100)
+                    self.rightmotor.back(100)
+                    self.leftmotor.back(70)
+#                     self.rightmotor.go(100)
+#                     self.leftmotor.go(100)
 
                 else:
-#                     self.rightmotor.back(100)
-#                     self.leftmotor.back(100)
+                    self.rightmotor.go(25)
+                    self.leftmotor.back(25)
 #                     time.sleep(1)
-                    self.rightmotor.go(100)
-                    self.leftmotor.go(100)
+                  
                     if time.time()-self.pre_motorBackTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE*3:
+                        self.rightmotor.go(100)
+                        self.leftmotor.go(100)
+                    elif time.time()-self.pre_motorBackTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE*6:
                         self.rightmotor.stop()
                         self.leftmotor.stop()
+                        
                         self.state = 4
                         self.laststate = 4
                         
@@ -701,12 +704,12 @@ class Cansat(object):
                 self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI)]
                 print(self.LogData)
 
-                if self.measuringcount == 0:
-                    pass
-                else:
-                    self.n_LogData.append(self.LogData)
+#                 if self.measuringcount == 0:
+#                     pass
+#                 else:
+                self.n_LogData.append(self.LogData)
                     
-                self.n_LogData_all.append(self.LogData)
+#                 self.n_LogData_all.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
                 self.n_LogLostRSSI.append(self.LogLostRSSI)
@@ -732,10 +735,10 @@ class Cansat(object):
                 
                 else:
                     self.measuringcount+=1#n点測量目
-                    self.state = 5
-                    self.laststate = 5
-                    print('finish!!')
-                    time.sleep(15)
+                    self.state = 6
+                    self.laststate = 6
+#                     print('finish!!')
+#                     time.sleep(15)
 
                     self.t_new=0 #オドメトリで必要な初期化
             
@@ -796,7 +799,7 @@ class Cansat(object):
                 self.odometri()
             else:
 
-                if math.sqrt((self.x - self.n_LogData_all[self.measuringcount-1][1])**2 + (self.y - self.n_LogData_all[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
+                if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
                         self.leftmotor.stop()
                         self.state = 5
@@ -829,7 +832,7 @@ class Cansat(object):
                     Rel_Estimation_Result_q -= 360
                 print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
                 
-                lastdata = str(self.n_LogData_all) + '\n' \
+                lastdata = str(self.n_LogData) + '\n' \
                     + str(self.n_LogCansatRSSI) + '\n' \
                     + str(self.n_LogLostRSSI) + '\n' \
                     +str(self.n_dis_LogCansatRSSI)+ '\n' \

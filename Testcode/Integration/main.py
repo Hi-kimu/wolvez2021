@@ -9,7 +9,7 @@ import constant as ct
 
 can=cansat.Cansat()
 can.setup()
-can.state = 5
+can.state = 2
 GPIO.setwarnings(False)
 
 try:
