@@ -71,8 +71,8 @@ class Cansat(object):
         
         #スタート地点移動用の緯度経度
         #cansatGPS
-        self.startlon=139.65603167
-        self.startlat=35.55505667
+        self.startlon=139.65608667
+        self.startlat=35.5550133
         
         #google map
         #self.startlon=139.6559749
@@ -114,6 +114,7 @@ class Cansat(object):
         self.meanLostRSSI=0
         self.LogData = list()
         self.n_LogData = list()
+        self.n_LogData_all = list()
         self.LogCansatRSSI=list()
         self.LogLostRSSI=list()
         self.n_dis_LogCansatRSSI=list()
@@ -121,7 +122,7 @@ class Cansat(object):
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
-        self.hazure = 5
+        self.hazure = 10
         
         #探査機推定時用の変数
         self.X, self.Y = np.meshgrid(np.arange(-30, 31, 1), np.arange(-30, 31, 1))
@@ -315,7 +316,8 @@ class Cansat(object):
             self.leftmotor.stop()
         #self.countPreLoop+ = 1
         if not self.preparingTime == 0:
-            if self.gpscount <= ct.const.PREPARING_GPS_COUNT_THRE:
+#             if self.gpscount <= ct.const.PREPARING_GPS_COUNT_THRE:
+            if self.gpscount <= 50:
                 self.startgps_lon.append(float(self.gps.Lon))
                 self.startgps_lat.append(float(self.gps.Lat))
                 print(f"GPS {self.gps.Lon},{self.gps.Lat}")
@@ -414,11 +416,16 @@ class Cansat(object):
             #一定時間モータを回してパラシュートから離れる
             elif self.landstate == 1:
                 if time.time()-self.pre_motorBackTime < ct.const.LANDING_PRE_MOTOR_TIME_THRE:
-                    pass
+#                     pass
 #                     self.rightmotor.back(100)
-#                     self.leftmotor.back(50)
+#                     self.leftmotor.back(70)
+                    self.rightmotor.go(100)
+                    self.leftmotor.go(100)
 
-                else:    
+                else:
+#                     self.rightmotor.back(100)
+#                     self.leftmotor.back(100)
+#                     time.sleep(1)
                     self.rightmotor.go(100)
                     self.leftmotor.go(100)
                     if time.time()-self.pre_motorBackTime > ct.const.LANDING_PRE_MOTOR_TIME_THRE*3:
@@ -651,7 +658,7 @@ class Cansat(object):
                     self.distanceCansat=self.radio.estimate_distance_Cansat(self.radio.cansat_rssi)
                     self.distanceLost=self.radio.estimate_distance_Lost(self.radio.lost_rssi)
                     print(f"カンサット推定距離:{self.distanceCansat},ロスト機推定距離:{self.distanceLost}")
-                    
+                    print(self.countSwitchLoop)
                     
                     self.countSwitchLoop+=1
             else:
@@ -690,8 +697,16 @@ class Cansat(object):
                 self.n_meandisLog.append(self.meandis)                
                 
                 #n点測量後に使用するデータを格納
+#                 self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
                 self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI)]
-                self.n_LogData.append(self.LogData)
+                print(self.LogData)
+
+                if self.measuringcount == 0:
+                    pass
+                else:
+                    self.n_LogData.append(self.LogData)
+                    
+                self.n_LogData_all.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
                 self.n_LogLostRSSI.append(self.LogLostRSSI)
@@ -717,8 +732,11 @@ class Cansat(object):
                 
                 else:
                     self.measuringcount+=1#n点測量目
-                    self.state = 6
-                    self.laststate = 6
+                    self.state = 5
+                    self.laststate = 5
+                    print('finish!!')
+                    time.sleep(15)
+
                     self.t_new=0 #オドメトリで必要な初期化
             
     def caseDiscrimination(self):
@@ -778,7 +796,7 @@ class Cansat(object):
                 self.odometri()
             else:
 
-                if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
+                if math.sqrt((self.x - self.n_LogData_all[self.measuringcount-1][1])**2 + (self.y - self.n_LogData_all[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
                         self.leftmotor.stop()
                         self.state = 5
@@ -811,13 +829,15 @@ class Cansat(object):
                     Rel_Estimation_Result_q -= 360
                 print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
                 
-                lastdata = str(self.n_LogData) + '\n' \
+                lastdata = str(self.n_LogData_all) + '\n' \
                     + str(self.n_LogCansatRSSI) + '\n' \
                     + str(self.n_LogLostRSSI) + '\n' \
+                    +str(self.n_dis_LogCansatRSSI)+ '\n' \
+                    +str(self.n_dis_LogLostRSSI)+ '\n' \
                     + "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) + "," + str(Estimation_Result_y) + ")" + '\n'\
                     + "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) + "," + str(Rel_Estimation_Result_q) + ")" + '\n'
                     
-                with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+                with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s_lastdata.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
                     test.write(lastdata)
                 
                 self.state = 8
