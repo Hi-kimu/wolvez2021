@@ -105,7 +105,7 @@ class radio(object):
         '''
         N_Cansat=3.0667 #0825
 #         MP_Cansat=-38.9
-        MP_Cansat=-55.58#0826
+        MP_Cansat=-50.95#0826
        
         return 10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))       
     
@@ -117,7 +117,7 @@ class radio(object):
         '''
         N_Lost=3.0667 #0825
 #         MP_Lost=-38.45
-        MP_Lost=-52.75
+        MP_Lost=-51.75
 
         return 10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
         
