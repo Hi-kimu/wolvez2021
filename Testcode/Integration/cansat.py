@@ -843,13 +843,11 @@ class Cansat(object):
                     Rel_Estimation_Result_q -= 360
                 print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
                 
-                lastdata = str(self.n_LogData) + '\n' \
-                    + str(self.n_LogCansatRSSI) + '\n' \
-                    + str(self.n_LogLostRSSI) + '\n' \
+                lastdata =
                     + "#CanSat定義式からの推定結果:"+str(self.n_dis_LogCansatRSSI)+ '\n' \
-                    +"#Lost定義式からの推定結果:"+str(self.n_dis_LogLostRSSI)+ '\n' \
-                    +"#CanSat近似式からの推定結果:"+str(self.n_dis_LogCansatRSSI_2)+ '\n' \
-                    +"#Lost近似式からの推定結果:"+str(self.n_dis_LogLostRSSI_2)+ '\n' \
+                    + "#Lost定義式からの推定結果:"+str(self.n_dis_LogLostRSSI)+ '\n' \
+                    + "#CanSat近似式からの推定結果:"+str(self.n_dis_LogCansatRSSI_2)+ '\n' \
+                    + "#Lost近似式からの推定結果:"+str(self.n_dis_LogLostRSSI_2)+ '\n' \
                     + "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) + "," + str(Estimation_Result_y) + ")" + '\n'\
                     + "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) + "," + str(Rel_Estimation_Result_q) + ")" + '\n'
                     
