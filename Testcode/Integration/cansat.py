@@ -119,6 +119,8 @@ class Cansat(object):
         self.LogLostRSSI=list()
         self.n_dis_LogCansatRSSI=list()
         self.n_dis_LogLostRSSI=list()
+        self.n_dis_LogCansatRSSI_2=list()
+        self.n_dis_LogLostRSSI_2=list()
         self.n_meandisLog=list()
         self.n_LogCansatRSSI=list()
         self.n_LogLostRSSI=list()
@@ -660,7 +662,10 @@ class Cansat(object):
                     self.LogLostRSSI.append(self.radio.lost_rssi)
                     self.distanceCansat=self.radio.estimate_distance_Cansat(self.radio.cansat_rssi)
                     self.distanceLost=self.radio.estimate_distance_Lost(self.radio.lost_rssi)
+                    self.distanceCansat_2=self.radio.estimate_distance_Cansat_2(self.radio.cansat_rssi)
+                    self.distanceLost_2=self.radio.estimate_distance_Lost_2(self.radio.lost_rssi)
                     print(f"カンサット推定距離:{self.distanceCansat},ロスト機推定距離:{self.distanceLost}")
+                    print(f"カンサット推定距離2:{self.distanceCansat_2},ロスト機推定距離2:{self.distanceLost_2}")
                     print(self.countSwitchLoop)
                     
                     self.countSwitchLoop+=1
@@ -691,17 +696,23 @@ class Cansat(object):
                 #距離推定
                 self.distanceCansatRSSI=self.radio.estimate_distance_Cansat(self.meanCansatRSSI)
                 self.distanceLostRSSI=self.radio.estimate_distance_Lost(self.meanLostRSSI)
+                self.distanceCansatRSSI_2=self.radio.estimate_distance_Cansat_2(self.meanCansatRSSI)
+                self.distanceLostRSSI_2=self.radio.estimate_distance_Lost_2(self.meanLostRSSI)
                 
                 print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
                 print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
+                print('カンサット:近似式からの推定'+str(self.distanceCansatRSSI_2))
+                print('ロスト機:近似式からの推定'+str(self.distanceLostRSSI_2))
                 self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
                 self.n_dis_LogLostRSSI.append(self.distanceLostRSSI)
+                self.n_dis_LogCansatRSSI_2.append(self.distanceCansatRSSI_2)
+                self.n_dis_LogLostRSSI_2.append(self.distanceLostRSSI_2)
+                
                 self.meandis=(self.distanceCansatRSSI+self.distanceLostRSSI)/2
                 self.n_meandisLog.append(self.meandis)                
                 
                 #n点測量後に使用するデータを格納
-#                 self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
-                self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI)]
+                self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
                 print(self.LogData)
 
 #                 if self.measuringcount == 0:
@@ -835,8 +846,10 @@ class Cansat(object):
                 lastdata = str(self.n_LogData) + '\n' \
                     + str(self.n_LogCansatRSSI) + '\n' \
                     + str(self.n_LogLostRSSI) + '\n' \
-                    +str(self.n_dis_LogCansatRSSI)+ '\n' \
-                    +str(self.n_dis_LogLostRSSI)+ '\n' \
+                    + "#CanSat定義式からの推定結果:"+str(self.n_dis_LogCansatRSSI)+ '\n' \
+                    +"#Lost定義式からの推定結果:"+str(self.n_dis_LogLostRSSI)+ '\n' \
+                    +"#CanSat近似式からの推定結果:"+str(self.n_dis_LogCansatRSSI_2)+ '\n' \
+                    +"#Lost近似式からの推定結果:"+str(self.n_dis_LogLostRSSI_2)+ '\n' \
                     + "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) + "," + str(Estimation_Result_y) + ")" + '\n'\
                     + "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) + "," + str(Rel_Estimation_Result_q) + ")" + '\n'
                     
