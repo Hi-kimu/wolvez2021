@@ -466,14 +466,13 @@ class Cansat(object):
             
             else:
                 print("GPS completed!!")
-                self.startgps_lon_mean=np.mean(self.startgps_lon)
-                self.startgps_lat_mean=np.mean(self.startgps_lat)
                 
-                                
                 if self.startstate==0:                                           
 #                     self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
 #                     self.startlat=35.55500310217821
 #                     self.startlon=139.656020989901
+                    self.startgps_lon_mean=np.mean(self.startgps_lon)
+                    self.startgps_lat_mean=np.mean(self.startgps_lat)
                     self.gps.vincenty_inverse(self.startlat,self.startlon,self.startgps_lat_mean,self.startgps_lon_mean)
                     #self.gps.vincenty_inverse(self.startlat,self.startlon,35.55518333,139.65596167)
                     #極座標から直交座標へ変換
@@ -642,117 +641,132 @@ class Cansat(object):
             self.GREEN_LED.led_on()
             self.rightmotor.stop()
             self.leftmotor.stop()
+            self.gpscount = 0
             
-            if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
+#            if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
          
-                self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
-                #極座標から直交座標へ変換
-                self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
-                self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
+ #               self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+  #              #極座標から直交座標へ変換
+   #             self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+    #            self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
                 
         else:
-            if self.countSwitchLoop < ct.const.MEASURING_SWITCH_COUNT_THRE:
-                self.rightmotor.stop()
-                self.leftmotor.stop()
-                #self.switchRadio()#LoRaでログを送信
-                if self.radio.cansat_rssi==0:
-                    pass
-                else:
-                    self.LogCansatRSSI.append(self.radio.cansat_rssi)
-                    self.LogLostRSSI.append(self.radio.lost_rssi)
-                    self.distanceCansat=self.radio.estimate_distance_Cansat(self.radio.cansat_rssi)
-                    self.distanceLost=self.radio.estimate_distance_Lost(self.radio.lost_rssi)
-                    self.distanceCansat_2=self.radio.estimate_distance_Cansat_2(self.radio.cansat_rssi)
-                    self.distanceLost_2=self.radio.estimate_distance_Lost_2(self.radio.lost_rssi)
-                    print(f"カンサット推定距離:{self.distanceCansat},ロスト機推定距離:{self.distanceLost}")
-                    print(f"カンサット推定距離2:{self.distanceCansat_2},ロスト機推定距離2:{self.distanceLost_2}")
-                    print(self.countSwitchLoop)
-                    
-                    self.countSwitchLoop+=1
+            if self.gpscount <= ct.const.PREPARING_GPS_COUNT_THRE and self.measuringcount == 0:
+                self.measuringgps_lon.append(float(self.gps.Lon))
+                self.measuringgps_lat.append(float(self.gps.Lat))
+                print(self.gpscount)
+                print(f"GPS {self.gps.Lon},{self.gps.Lat}")
+                self.gpscount+=1
+                time.sleep(1)
+                if self.gpscount == ct.const.PREPARING_GPS_COUNT_THRE:
+                    self.measuringgps_lon_mean=np.mean(self.measuringgps_lon)
+                    self.measuringgps_lat_mean=np.mean(self.measuringgps_lat)
+                    self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
+                    self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
+                    self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
             else:
-                print("RSSIのlist_before:",self.LogCansatRSSI)
-#                 self.LogCansatRSSI_2 = []
-#                 for i in self.LogCansatRSSI:
-#                     self.LogCansatRSSI_2.append(self.LogCansatRSSI[i][0])
-#                 self.LogCansatRSSI = self.LogCansatRSSI_2
-#                 print("RSSIのlist_before_2:",self.LogCansatRSSI)
-                #hazure
-                self.LogCansatRSSI_median = statistics.median(self.LogCansatRSSI)
-                self.LogCansatRSSI_low = self.LogCansatRSSI_median - self.hazure
-                self.LogCansatRSSI_high = self.LogCansatRSSI_median + self.hazure
-                self.LogCansatRSSI_rec = []
+                if self.countSwitchLoop < ct.const.MEASURING_SWITCH_COUNT_THRE:
+                    self.rightmotor.stop()
+                    self.leftmotor.stop()
+                    #self.switchRadio()#LoRaでログを送信
+                    if self.radio.cansat_rssi==0:
+                        pass
+                    else:
+                        self.LogCansatRSSI.append(self.radio.cansat_rssi)
+                        self.LogLostRSSI.append(self.radio.lost_rssi)
+                        self.distanceCansat=self.radio.estimate_distance_Cansat(self.radio.cansat_rssi)
+                        self.distanceLost=self.radio.estimate_distance_Lost(self.radio.lost_rssi)
+                        self.distanceCansat_2=self.radio.estimate_distance_Cansat_2(self.radio.cansat_rssi)
+                        self.distanceLost_2=self.radio.estimate_distance_Lost_2(self.radio.lost_rssi)
+                        print(f"カンサット推定距離:{self.distanceCansat},ロスト機推定距離:{self.distanceLost}")
+                        print(f"カンサット推定距離2:{self.distanceCansat_2},ロスト機推定距離2:{self.distanceLost_2}")
+                        print(self.countSwitchLoop)
 
-                for i in range(0, len(self.LogCansatRSSI)):
-                    if self.LogCansatRSSI[i] < self.LogCansatRSSI_low or self.LogCansatRSSI[i] > self.LogCansatRSSI_high:
-                        self.LogCansatRSSI_rec.append(i)
-                for i in range(0, len(self.LogCansatRSSI_rec)):
-                    del self.LogCansatRSSI[self.LogCansatRSSI_rec[i]-i]
-                print("RSSIのlist_after:",self.LogCansatRSSI)
-                
-                #RSSIの平均取る
-                self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
-                self.meanLostRSSI=np.mean(self.LogLostRSSI)
-               
-                #距離推定
-                self.distanceCansatRSSI=self.radio.estimate_distance_Cansat(self.meanCansatRSSI)
-                self.distanceLostRSSI=self.radio.estimate_distance_Lost(self.meanLostRSSI)
-                self.distanceCansatRSSI_2=self.radio.estimate_distance_Cansat_2(self.meanCansatRSSI)
-                self.distanceLostRSSI_2=self.radio.estimate_distance_Lost_2(self.meanLostRSSI)
-                
-                print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
-                print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
-                print('カンサット:近似式からの推定'+str(self.distanceCansatRSSI_2))
-                print('ロスト機:近似式からの推定'+str(self.distanceLostRSSI_2))
-                self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
-                self.n_dis_LogLostRSSI.append(self.distanceLostRSSI)
-                self.n_dis_LogCansatRSSI_2.append(self.distanceCansatRSSI_2)
-                self.n_dis_LogLostRSSI_2.append(self.distanceLostRSSI_2)
-                
-                self.meandis=(self.distanceCansatRSSI+self.distanceLostRSSI)/2
-                self.n_meandisLog.append(self.meandis)                
-                
-                #n点測量後に使用するデータを格納
-                self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
-                print(self.LogData)
-
-#                 if self.measuringcount == 0:
-#                     pass
-#                 else:
-                self.n_LogData.append(self.LogData)
-                    
-#                 self.n_LogData_all.append(self.LogData)
-                #RSSIのデータ保管
-                self.n_LogCansatRSSI.append(self.LogCansatRSSI)
-                self.n_LogLostRSSI.append(self.LogLostRSSI)
-                
-                with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
-                    writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
-                    writer.writerow(self.LogData) # csvファイルに書き込み
-                    writer.writerow(self.LogCansatRSSI)
-                    writer.writerow(self.LogLostRSSI)
-                  
-                
-                self.meanCansatRSSI=0
-                self.meanLostRSSI=0
-                self.mesureringTime = 0
-                self.countSwitchLoop = 0
-                self.LogCansatRSSI=[]
-                self.LogLostRSSI=[]
-                self.LogData=[]
-                
-                if self.measuringcount == ct.const.MEASURING_MAX_MEASURING_COUNT_THRE:
-                    self.state = 7
-                    self.laststate = 7
-                
+                        self.countSwitchLoop+=1
                 else:
-                    self.measuringcount+=1#n点測量目
-                    self.state = 6
-                    self.laststate = 6
-#                     print('finish!!')
-#                     time.sleep(15)
+                    print("RSSIのlist_before:",self.LogCansatRSSI)
+    #                 self.LogCansatRSSI_2 = []
+    #                 for i in self.LogCansatRSSI:
+    #                     self.LogCansatRSSI_2.append(self.LogCansatRSSI[i][0])
+    #                 self.LogCansatRSSI = self.LogCansatRSSI_2
+    #                 print("RSSIのlist_before_2:",self.LogCansatRSSI)
+                    #hazure
+                    self.LogCansatRSSI_median = statistics.median(self.LogCansatRSSI)
+                    self.LogCansatRSSI_low = self.LogCansatRSSI_median - self.hazure
+                    self.LogCansatRSSI_high = self.LogCansatRSSI_median + self.hazure
+                    self.LogCansatRSSI_rec = []
 
-                    self.t_new=0 #オドメトリで必要な初期化
-            
+                    for i in range(0, len(self.LogCansatRSSI)):
+                        if self.LogCansatRSSI[i] < self.LogCansatRSSI_low or self.LogCansatRSSI[i] > self.LogCansatRSSI_high:
+                            self.LogCansatRSSI_rec.append(i)
+                    for i in range(0, len(self.LogCansatRSSI_rec)):
+                        del self.LogCansatRSSI[self.LogCansatRSSI_rec[i]-i]
+                    print("RSSIのlist_after:",self.LogCansatRSSI)
+
+                    #RSSIの平均取る
+                    self.meanCansatRSSI=np.mean(self.LogCansatRSSI)
+                    self.meanLostRSSI=np.mean(self.LogLostRSSI)
+
+                    #距離推定
+                    self.distanceCansatRSSI=self.radio.estimate_distance_Cansat(self.meanCansatRSSI)
+                    self.distanceLostRSSI=self.radio.estimate_distance_Lost(self.meanLostRSSI)
+                    self.distanceCansatRSSI_2=self.radio.estimate_distance_Cansat_2(self.meanCansatRSSI)
+                    self.distanceLostRSSI_2=self.radio.estimate_distance_Lost_2(self.meanLostRSSI)
+
+                    print('カンサット:定義式からの推定'+str(self.distanceCansatRSSI))
+                    print('ロスト機:定義式からの推定'+str(self.distanceLostRSSI))
+                    print('カンサット:近似式からの推定'+str(self.distanceCansatRSSI_2))
+                    print('ロスト機:近似式からの推定'+str(self.distanceLostRSSI_2))
+                    self.n_dis_LogCansatRSSI.append(self.distanceCansatRSSI)
+                    self.n_dis_LogLostRSSI.append(self.distanceLostRSSI)
+                    self.n_dis_LogCansatRSSI_2.append(self.distanceCansatRSSI_2)
+                    self.n_dis_LogLostRSSI_2.append(self.distanceLostRSSI_2)
+
+                    self.meandis=(self.distanceCansatRSSI+self.distanceLostRSSI)/2
+                    self.n_meandisLog.append(self.meandis)                
+
+                    #n点測量後に使用するデータを格納
+                    self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
+                    print(self.LogData)
+
+    #                 if self.measuringcount == 0:
+    #                     pass
+    #                 else:
+                    self.n_LogData.append(self.LogData)
+
+    #                 self.n_LogData_all.append(self.LogData)
+                    #RSSIのデータ保管
+                    self.n_LogCansatRSSI.append(self.LogCansatRSSI)
+                    self.n_LogLostRSSI.append(self.LogLostRSSI)
+
+                    with open("%s/%s.csv" % (self.filename,self.filename_hm), "a", encoding='utf-8') as f: # 文字コードをShift_JISに指定 'a':末尾に追加
+                        writer = csv.writer(f, lineterminator='\n') # writerオブジェクトの作成 改行記号で行を区切る
+                        writer.writerow(self.LogData) # csvファイルに書き込み
+                        writer.writerow(self.LogCansatRSSI)
+                        writer.writerow(self.LogLostRSSI)
+
+
+                    self.meanCansatRSSI=0
+                    self.meanLostRSSI=0
+                    self.mesureringTime = 0
+                    self.countSwitchLoop = 0
+                    self.LogCansatRSSI=[]
+                    self.LogLostRSSI=[]
+                    self.LogData=[]
+
+                    if self.measuringcount == ct.const.MEASURING_MAX_MEASURING_COUNT_THRE:
+                        self.state = 7
+                        self.laststate = 7
+
+                    else:
+                        self.measuringcount+=1#n点測量目
+                        self.state = 6
+                        self.laststate = 6
+    #                     print('finish!!')
+    #                     time.sleep(15)
+
+                        self.t_new=0 #オドメトリで必要な初期化
+
     def caseDiscrimination(self):
         if self.x < - ct.const.CASE_DISCRIMINATION and self.y < ct.const.SHADOW_EDGE_LENGTH + ct.const.CASE_DISCRIMINATION:
             self.case=0
@@ -805,7 +819,7 @@ class Cansat(object):
             
             if self.case == 4:#永久影からの脱出
                 
-                self.rightmotor.go(60)
+                self.rightmotor.go(78)
                 self.leftmotor.go(80)
                 self.odometri()
             else:
@@ -828,7 +842,7 @@ class Cansat(object):
             self.rightmotor.stop()
             self.leftmotor.stop()
         else:
-            if self.positioning_count > self.measuringcount:
+            if self.positioning_count >= len(self.n_LogData):
                 self.n_pdf_sum=sum(self.n_pdf)
                 Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum)
                 #絶対座標
