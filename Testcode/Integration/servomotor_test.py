@@ -7,10 +7,10 @@ servomotor = servomotor.servomotor(25)
 
 
 try:
-    #while True:
-    print("servomotor run")
+    while True:
+        print("servomotor run")
 #     servomotor.stop()
-    for i in range(2):
+    #for i in range(2):
         servomotor.servo_angle(100)#CLOSE
         time.sleep(0.3)
 #     servomotor.servo_angle(0)#OPEN
