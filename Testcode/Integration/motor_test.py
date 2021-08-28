@@ -25,8 +25,8 @@ try:
 #     Motor2.back(70)
 #     time.sleep(2)
     
-    Motor1.go(100)
-    Motor2.go(100)
+    Motor1.go(70)
+    Motor2.go(80)
     time.sleep(10)
     
 #     
