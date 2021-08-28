@@ -641,14 +641,9 @@ class Cansat(object):
             self.GREEN_LED.led_on()
             self.rightmotor.stop()
             self.leftmotor.stop()
+            self.measuringgps_lon=()
+            self.measuringgps_lat=()
             self.gpscount = 0
-            
-#            if self.measuringcount == 0:#1回目測量時にGPSからself.xとself.yを算出
-         
- #               self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
-  #              #極座標から直交座標へ変換
-   #             self.x = self.gps.gpsdis*math.cos(math.radians(self.gps.gpsdegrees))
-    #            self.y = self.gps.gpsdis*math.sin(math.radians(self.gps.gpsdegrees))
                 
         else:
             if self.gpscount <= ct.const.PREPARING_GPS_COUNT_THRE and self.measuringcount == 0:
@@ -729,9 +724,6 @@ class Cansat(object):
                     self.LogData = [self.measuringcount,self.x,self.y,self.meandis,np.std(self.LogCansatRSSI),np.std(self.LogLostRSSI), self.meanCansatRSSI,self.meanLostRSSI]
                     print(self.LogData)
 
-    #                 if self.measuringcount == 0:
-    #                     pass
-    #                 else:
                     self.n_LogData.append(self.LogData)
 
     #                 self.n_LogData_all.append(self.LogData)
@@ -872,10 +864,14 @@ class Cansat(object):
                 self.laststate = 8
                 
             else:
-                self.n_pdf.append(self.pdf(self.n_LogData[self.positioning_count][1],
-                                      self.n_LogData[self.positioning_count][2],
-                                      self.n_LogData[self.positioning_count][3]))
-                self.positioning_count +=1
+                if self.n_LogData[self.positioning_count][4]>3  or self.n_LogData[self.positioning_count][5] >3 
+                    self.positioning_count +=1
+                    
+                else:
+                    self.n_pdf.append(self.pdf(self.n_LogData[self.positioning_count][1],
+                                          self.n_LogData[self.positioning_count][2],
+                                          self.n_LogData[self.positioning_count][3]))
+                    self.positioning_count +=1
         
     def finish(self):
         if self.finishTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
