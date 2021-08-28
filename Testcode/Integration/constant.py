@@ -24,7 +24,7 @@ const.FLIGHTPIN_PIN = 4
 #Variable Threshold
 const.ANGLE_THRE = 10
 const.SHADOW_EDGE_LENGTH = 15
-const.MEASURMENT_INTERVAL = 5 #測位点間距離
+const.MEASURMENT_INTERVAL = 500000000000 #測位点間距離
 const.MAX_SHADOW_EDGE_LENGTH = 5
 const.CASE_DISCRIMINATION = 2 #Case判定における許容誤差
 const.START_CONST_SHORT = 0.5 #Startingステートにおける帯の幅　±0.5
@@ -43,3 +43,5 @@ const.LANDING_PRE_MOTOR_TIME_THRE = 1
 const.STARTING_TIME_THRE = 60
 const.MEASURING_SWITCH_COUNT_THRE = 20#1地点での測位回数
 const.MEASURING_MAX_MEASURING_COUNT_THRE = 6 #=最大測位点-1
+const.RUNNiNG_STUCK_ACC_THRE = 0.005
+const.ACC_COUNT = 7 #スタック判定する加速度の個数

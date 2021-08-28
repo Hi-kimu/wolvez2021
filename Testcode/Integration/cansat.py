@@ -37,6 +37,9 @@ class Cansat(object):
     def __init__(self):
         GPIO.setwarnings(False)
         #オブジェクトの生成
+        self.countstuck = 0
+        self.accdata=list()
+        
         self.rightmotor = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
         self.leftmotor = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
         self.encoder = estimation.estimation(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.RIGHT_MOTOR_ENCODER_B_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_B_PIN)
@@ -116,6 +119,8 @@ class Cansat(object):
         self.meanLostRSSI=0
         self.LogData = list()
         self.n_LogData = list()
+        self.n_LogData = [[0],[0,7.834751202079564,-5.432902521540001,13.922119594581348,0.4769696007084729,0.6403124237432849,-73.15,-74.3]]
+        
 #         self.n_LogData_all = list()
         self.LogCansatRSSI=list()
         self.LogLostRSSI=list()
@@ -210,7 +215,7 @@ class Cansat(object):
             else:
                 self.rightmotor.stop()
                 self.leftmotor.stop()
-                self.switchRadio()
+                #self.switchRadio()
             
     def odometri(self):
         if self.t_new==0:
@@ -246,7 +251,8 @@ class Cansat(object):
                   + "lV:" + str(round(self.leftmotor.velocity,2)).rjust(6) + ","\
                   + "x:" + str(round(self.x,2)).rjust(6) + ","\
                   + "y:" + str(round(self.y,2)).rjust(6) + ","\
-                  + "q:" + str(self.ex).rjust(6) 
+                  + "q:" + str(self.ex).rjust(6)
+        
         print(print_datalog)
         
         datalog = str(self.timer) + ","\
@@ -307,6 +313,8 @@ class Cansat(object):
         elif self.state == 7:
             self.positioning()
         elif self.state == 8:
+            self.modified_positioning()
+        elif self.state == 9:
             self.finish()
         else:
             self.state = self.laststate #どこにも引っかからない場合何かがおかしいのでlaststateに戻してあげる
@@ -390,7 +398,7 @@ class Cansat(object):
 #             self.servomotor.servo_angle(20)
             
             if self.countDropLoop > ct.const.DROPPING_ACC_COUNT_THRE:
-                if self.gz < -1:
+                if self.gz < 1:
                     print("Back Escape!!")
                     self.back_escape = 1
                 self.state = 3
@@ -414,7 +422,7 @@ class Cansat(object):
 #                     self.servomotor.servo_angle(-10-10*i)#サーボモータ動かしてパラ分離
 #                     time.sleep(0.1)
                 for i in range(5):
-                    self.servomotor.servo_angle(-50)#サーボモータ動かしてパラ分離
+                    self.servomotor.servo_angle(0)#サーボモータ動かしてパラ分離
                     #time.sleep(0.05)
                     
                 if time.time()-self.landingTime > ct.const.LANDING_RELEASING_TIME_THRE:
@@ -756,8 +764,8 @@ class Cansat(object):
                 self.LogData=[]
 
                 if self.measuringcount == ct.const.MEASURING_MAX_MEASURING_COUNT_THRE:
-                    self.state = 7
-                    self.laststate = 7
+                    self.state = 8
+                    self.laststate = 8
 
                 else:
                     self.measuringcount+=1#n点測量目
@@ -806,7 +814,58 @@ class Cansat(object):
             self.leftmotor.go(self.v_ref)
             self.rightmotor.go(self.v_ref+ke)
     
+            
+     
+    def stuck_detection(self):#スタック検知
+        print("Acceleration:"+str( self.Az**2))
+        if len(self.accdata)< ct.const.ACC_COUNT:
+            self.accdata.append(float(self.Az**2))
+#             print(self.accdata)
+                     
+           
+        else:
+#             self.accdata.sort()
+#             print(self.accdata)
+#             print(f"5:{self.accdata[4]}")
+#             print(f"accmean:{np.mean(self.accdata)}")
+            print(f"accmedian:{np.median(self.accdata)}")
+            self.accdata[1:ct.const.ACC_COUNT]= self.accdata[0:ct.const.ACC_COUNT-1]
+            self.accdata[0]=self.Az**2
+            acc=np.array(self.accdata)
+            print(acc)
+            self.countstuck=np.count_nonzero( acc < ct.const.RUNNiNG_STUCK_ACC_THRE)
+            print(self.countstuck)
+            
+            if self.countstuck > 4:
+                print("stuck!!!!!")
+                back = False #バックでスタックから脱出したい場合True,トルネードならFalse
+
+                self.rightmotor.stop()
+                self.leftmotor.stop()
+
+                if back:#バックで脱出
+                    print("back")
+                    self.rightmotor.back(100)
+                    self.leftmotor.back(100) 
+                    time.sleep(1)
+                    self.rightmotor.back(30)
+                    self.leftmotor.back(80)
+                    time.sleep(1)
+
+                else:#トルネードで脱出
+                    self.rightmotor.go(100)
+                    self.leftmotor.back(100)
+                    time.sleep(0.5)
+                    self.rightmotor.go(self.v_ref)
+                    self.leftmotor.go(self.v_ref)
+                    time.sleep(1)
+                    self.accdata=list()
+        
+
+    
     def running(self):
+#         print("Acceleration:"+str(self.Ax**2 + self.Ay**2 + self.Az**2))
+#         print("Acceleration:"+str(self.Az**2 ))
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.runningTime = time.time()
             self.RED_LED.led_on()
@@ -816,15 +875,15 @@ class Cansat(object):
         
         else:#Case判定  
             self.caseDiscrimination()#Case判定
+            self.case=0
             print("case is "+str(self.case))
             
             if self.case == 4:#永久影からの脱出
-                
                 self.rightmotor.go(70)
                 self.leftmotor.go(80)
                 self.odometri()
+                
             else:
-
                 if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
                         self.leftmotor.stop()
@@ -833,6 +892,8 @@ class Cansat(object):
                 else:
                     self.motor_run()
                     self.odometri()
+                    
+                    self.stuck_detection()
                         
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -868,8 +929,8 @@ class Cansat(object):
                 with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s_lastdata.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
                     test.write(lastdata)
                 
-                self.state = 8
-                self.laststate = 8
+                self.state = 9
+                self.laststate = 9
                 
             else:
                 if self.n_LogData[self.positioning_count][4]>3  or self.n_LogData[self.positioning_count][5] >3 :
@@ -880,6 +941,76 @@ class Cansat(object):
                                           self.n_LogData[self.positioning_count][2],
                                           self.n_LogData[self.positioning_count][3]))
                     self.positioning_count +=1
+                    
+    def modified_positioning(self):
+        if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
+            self.positioningTime = time.time()
+            self.RED_LED.led_on()
+            self.BLUE_LED.led_off()
+            self.GREEN_LED.led_off()
+            self.rightmotor.stop()
+            self.leftmotor.stop()
+            
+            self.FirstMeasuring_r = float(input("1回目測位地点：基準点からの距離を入力"))
+            self.FirstMeasuring_q = float(input("1回目測位地点：基準点からCanSatを見たときの方位角を入力"))
+            
+            self.FirstMeasuring_x = self.FirstMeasuring_r * math.cos(math.radians(self.FirstMeasuring_q))
+            self.FirstMeasuring_y = self.FirstMeasuring_r * math.sin(math.radians(self.FirstMeasuring_q))
+            
+            self.error_x = self.FirstMeasuring_x - self.n_LogData[0][1]
+            self.error_y = self.FirstMeasuring_y - self.n_LogData[0][2]
+        else:
+            if self.positioning_count >= len(self.n_LogData):
+                self.n_pdf_sum=sum(self.n_pdf)
+                Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum)
+                #絶対座標
+                print("絶対座標(x,y):" +"(" + str(Estimation_Result_x)+","+str(Estimation_Result_y)+")")
+                World_Estimation_Error = math.sqrt((Estimation_Result_x - 7 )**2 + (Estimation_Result_y - 6 )**2) #探索機が(x,y)の場合
+                print("絶対測位誤差:" + str(World_Estimation_Error))
+                
+                #最終地点との相対座標
+                Rel_Estimation_Result_r = math.sqrt((Estimation_Result_x - self.x)**2 + (Estimation_Result_y - self.y)**2)
+                Rel_Estimation_Result_q = math.degrees(math.atan2(Estimation_Result_y - self.y, Estimation_Result_x - self.x))
+                if Rel_Estimation_Result_q < 0:
+                    Rel_Estimation_Result_q += 360
+                elif Rel_Estimation_Result_q > 360:
+                    Rel_Estimation_Result_q -= 360
+                print("相対距離(r,q):" +"(" + str(Rel_Estimation_Result_r)+","+str(Rel_Estimation_Result_q)+")")
+                
+                Rel_Real_r = float(input("相対距離を入力"))
+                Rel_Real_q = float(input("CanSatから探査機を見たときの方位角を入力"))
+                
+                Rel_Estimation_Error = math.sqrt(Rel_Estimation_Result_r**2 + Rel_Real_r**2 - 2 * Rel_Estimation_Result_r * Rel_Real_r * math.cos(math.radians(Rel_Estimation_Result_q - Rel_Real_q)))
+                
+                print("相対測位誤差:" + str(Rel_Estimation_Error))
+                
+                lastdata =  "#CanSat定義式からの推定結果:"+str(self.n_dis_LogCansatRSSI)+ '\n' \
+                    + "#Lost定義式からの推定結果:"+str(self.n_dis_LogLostRSSI)+ '\n' \
+                    + "#CanSat近似式からの推定結果:"+str(self.n_dis_LogCansatRSSI_2)+ '\n' \
+                    + "#Lost近似式からの推定結果:"+str(self.n_dis_LogLostRSSI_2)+ '\n' \
+                    + "#絶対座標(x,y):" + "(" + str(Estimation_Result_x) + "," + str(Estimation_Result_y) + ")" + '\n'\
+                    + "絶対測位誤差:" + str(World_Estimation_Error) + '\n' \
+                    + "#相対距離(r,q):" + "(" + str(Rel_Estimation_Result_r) + "," + str(Rel_Estimation_Result_q) + ")" + '\n' \
+                    + "相対測位誤差:" + str(Rel_Estimation_Error) + '\n'
+                    
+                with open('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s/%s_lastdata.txt' % (self.filename,self.filename_hm),mode = 'a') as test: # [mode] x:ファイルの新規作成、r:ファイルの読み込み、w:ファイルへの書き込み、a:ファイルへの追記
+                    test.write(lastdata)
+                
+                self.state = 9
+                self.laststate = 9
+                
+            else:
+                self.n_LogData[self.positioning_count][1] += self.error_x
+                self.n_LogData[self.positioning_count][2] += self.error_y
+                
+                if self.n_LogData[self.positioning_count][4]>3  or self.n_LogData[self.positioning_count][5] >3 :
+                    pass
+                    
+                else:
+                    self.n_pdf.append(self.pdf(self.n_LogData[self.positioning_count][1],
+                                          self.n_LogData[self.positioning_count][2],
+                                          self.n_LogData[self.positioning_count][3]))
+                self.positioning_count +=1
         
     def finish(self):
         if self.finishTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
@@ -887,12 +1018,13 @@ class Cansat(object):
             self.RED_LED.led_off()
             self.BLUE_LED.led_off()
             self.GREEN_LED.led_off()
+            
             sys.exit()
         
     def pdf(self,xc,yc,r):
         w=1
         ww=3
-        return 1*np.exp(-1*ww*((w*X-xc)**2+(w*Y-yc)**2)/(2*r**2))*((w*X-xc)**2+(w*Y-yc)**2)/(2*math.pi*r**2)
+        return 1*np.exp(-1*ww*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*r**2))*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*math.pi*r**2)
     
     def graph(self,Z):
         x = np.arange(-30, 31, 1)
@@ -917,8 +1049,7 @@ class Cansat(object):
         my_path = os.path.abspath('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
         my_file = name + ".pdf"
         fig.savefig(os.path.join(my_path, my_file))
-        error = math.sqrt((x_est - 2 )**2 + (y_est - 10 )**2) #探索機が(x,y)の場合
-        print("error:" + str(error) + "m" )
+        
         return x_est, y_est
 
 if __name__ == "__main__":

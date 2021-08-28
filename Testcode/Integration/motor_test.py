@@ -19,15 +19,14 @@ try:
 #             Motor1.go(i)
 #             Motor2.go(i)
 #             time.sleep(0.1)
-        
-        
+                
 #     Motor1.back(100)
 #     Motor2.back(70)
 #     time.sleep(2)
     
-    Motor1.go(70)
-    Motor2.go(80)
-    time.sleep(10)
+    Motor1.go(50)
+    Motor2.go(50)
+    time.sleep(2)
     
 #     
 #  #   Motor1.back(85)
@@ -40,7 +39,7 @@ try:
     print("motor stop")
     Motor1.stop()
     Motor2.stop()
-    time.sleep(1)
+    time.sleep(0.5)
 except KeyboardInterrupt:
     print("motor stop")
     Motor1.stop()
