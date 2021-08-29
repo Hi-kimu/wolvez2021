@@ -3,7 +3,7 @@
 import time
 import radio_setting
 import re
-
+import math
 # LoRa送信用クラス
 class radio(object):
     
@@ -99,19 +99,39 @@ class radio(object):
             
     def estimate_distance_Cansat(self,meanCansatRSSI):
         #定義式より推定 
-        N_Cansat=2.933
+        '''
+        N_Cansat=2.933 #0803
         MP_Cansat=-37.43
+        '''
+        N_Cansat=3.0667 #0825
+        MP_Cansat=-38.9
+#         MP_Cansat=-50.95#0826
        
         return 10**((MP_Cansat-meanCansatRSSI)/(10*N_Cansat))       
     
     def estimate_distance_Lost(self,meanLostRSSI):
         #定義式より推定
-        N_Lost=2.933
+        '''
+        N_Lost=2.933 #0803
         MP_Lost=-37.30
+        '''
+        N_Lost=3.0667 #0825
+        MP_Lost=-38.45
+#         MP_Lost=-51.75
 
         return 10**((MP_Lost-meanLostRSSI)/(10*N_Lost))
         
-  
+            
+    def estimate_distance_Cansat_2(self,meanCansatRSSI):
+        #近似式より推定
+       return 0.2563*math.exp(-0.05*meanCansatRSSI)
+     
+    
+    def estimate_distance_Lost_2(self,meanLostRSSI):
+        #近似式より推定
+     
+        return 0.2152*math.exp(-0.053*meanLostRSSI)
+
 
 
         
