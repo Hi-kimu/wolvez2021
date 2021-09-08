@@ -121,9 +121,9 @@ class Cansat(object):
         self.meanLostRSSI=0
         self.LogData = list()
         self.n_LogData = list()
-        self.n_LogData = [[0],[0,7.834751202079564,-5.432902521540001,13.922119594581348,0.4769696007084729,0.6403124237432849,-73.15,-74.3]]
+#         self.n_LogData = [[0],[0,7.834751202079564,-5.432902521540001,13.922119594581348,0.4769696007084729,0.6403124237432849,-73.15,-74.3]]
         
-#         self.n_LogData_all = list()
+#         self._all = list()
         self.LogCansatRSSI=list()
         self.LogLostRSSI=list()
         self.n_dis_LogCansatRSSI=list()
@@ -572,6 +572,7 @@ class Cansat(object):
                             self.gpscount+=1
                             time.sleep(1)
                             if self.gpscount == ct.const.PREPARING_GPS_COUNT_THRE:
+                                print("a")
                                 self.measuringgps_lon_mean=np.mean(self.measuringgps_lon)
                                 self.measuringgps_lat_mean=np.mean(self.measuringgps_lat)
                                 self.gps.vincenty_inverse(self.startlat,self.startlon,self.gps.Lat,self.gps.Lon)#距離:self.gps.gpsdis 方位角:self.gps.gpsdegrees
@@ -587,6 +588,8 @@ class Cansat(object):
                         self.odometri()
 
                     if time.time() - self.startingTime > ct.const.STARTING_TIME_THRE:#x秒経ってもスタート地点に着いてない場合は次のステートへ
+                        print("b")
+                        print(time.time() - self.startingTime)
                         self.state = 5
                         self.laststate = 5
                         #self.startstate=0
@@ -669,6 +672,7 @@ class Cansat(object):
 
     def measuring(self):
         print("measuring count is "+str(self.measuringcount))
+     
         if self.measureringTimeLog == list():#時刻を取得してLEDをステートに合わせて光らせる
             self.measureringTimeLog.append(time.time())
             self.RED_LED.led_off()
@@ -681,7 +685,7 @@ class Cansat(object):
             if self.countSwitchLoop < ct.const.MEASURING_SWITCH_COUNT_THRE:
                 self.rightmotor.stop()
                 self.leftmotor.stop()
-                #self.switchRadio()#LoRaでログを送信
+                self.switchRadio()#LoRaでログを送信
                 if self.radio.cansat_rssi==0:
                     pass
                 else:
@@ -745,7 +749,6 @@ class Cansat(object):
 
                 self.n_LogData.append(self.LogData)
 
-#                 self.n_LogData_all.append(self.LogData)
                 #RSSIのデータ保管
                 self.n_LogCansatRSSI.append(self.LogCansatRSSI)
                 self.n_LogLostRSSI.append(self.LogLostRSSI)
@@ -773,7 +776,7 @@ class Cansat(object):
                     self.measuringcount+=1#n点測量目
                     self.state = 6
                     self.laststate = 6
-#                     print('finish!!')
+                    print(self.measuringcount)
 #                     time.sleep(15)
 
                     self.t_new=0 #オドメトリで必要な初期化
@@ -903,7 +906,7 @@ class Cansat(object):
         
         else:#Case判定  
             self.caseDiscrimination()#Case判定
-            self.case=0
+#             self.case=0
             print("case is "+str(self.case))
             
             if self.case == 4:#永久影からの脱出
@@ -913,6 +916,9 @@ class Cansat(object):
                 print("case is "+str(self.case))
                 
             else:
+                print(f"measuringcount-1 :{self.measuringcount-1}")
+                print(f"n_LogData :{self.n_LogData}")
+                print(f"n_LogData01: {self.n_LogData[0][1]}")
                 if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ
                         self.rightmotor.stop()
                         self.leftmotor.stop()
@@ -922,7 +928,7 @@ class Cansat(object):
                     self.motor_run()
                     self.odometri()
                     
-                    self.stuck_detection()
+#                     self.stuck_detection()
                         
     def positioning(self):
         if self.positioningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる

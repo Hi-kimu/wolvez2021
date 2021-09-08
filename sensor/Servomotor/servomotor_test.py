@@ -11,7 +11,7 @@ try:
     print("servomotor run")
 
     servomotor.servo_angle(0)#CLOSE
-    time.sleep(0.3)
+    time.sleep(1)
     #servomotor.servo_angle(0)#OPEN
 #     time.sleep(0.3)
     servomotor.stop()
