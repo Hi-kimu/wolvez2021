@@ -40,7 +40,7 @@ try:
     MotorR.stop()
     MotorL.stop()
     
-    MotorR.go(81)
+    MotorR.go(80)
     MotorL.go(80)
 #     MotorR.back(80)
 #     MotorL.back(80)

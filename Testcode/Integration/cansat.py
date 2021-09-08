@@ -39,6 +39,8 @@ class Cansat(object):
         #オブジェクトの生成
         self.countstuck = 0
         self.accdata=list()
+        self.accdata_x=list()
+        self.accdata_y=list()
         
         self.rightmotor = motor.motor(ct.const.RIGHT_MOTOR_IN1_PIN,ct.const.RIGHT_MOTOR_IN2_PIN,ct.const.RIGHT_MOTOR_VREF_PIN)
         self.leftmotor = motor.motor(ct.const.LEFT_MOTOR_IN1_PIN,ct.const.LEFT_MOTOR_IN2_PIN,ct.const.LEFT_MOTOR_VREF_PIN)
@@ -820,19 +822,33 @@ class Cansat(object):
         print("Acceleration:"+str( self.Az**2))
         if len(self.accdata)< ct.const.ACC_COUNT:
             self.accdata.append(float(self.Az**2))
-#             print(self.accdata)
-                     
+            self.accdata_x.append(float(self.x))
+            self.accdata_y.append(float(self.y))
+            print(self.accdata)
+            print("X:",self.accdata_x)
+            print("Y:",self.accdata_y)
+            self.odometri()
            
         else:
 #             self.accdata.sort()
 #             print(self.accdata)
 #             print(f"5:{self.accdata[4]}")
 #             print(f"accmean:{np.mean(self.accdata)}")
-            print(f"accmedian:{np.median(self.accdata)}")
-            self.accdata[1:ct.const.ACC_COUNT]= self.accdata[0:ct.const.ACC_COUNT-1]
-            self.accdata[0]=self.Az**2
+#             print(f"accmedian:{np.median(self.accdata)}")
+            self.accdata[0:ct.const.ACC_COUNT-1]= self.accdata[1:ct.const.ACC_COUNT]
+            self.accdata.append(float(self.Az**2))
+#             self.accdata_x[0:ct.const.ACC_COUNT-1]= self.accdata_x[1:ct.const.ACC_COUNT]
+#             self.accdata_x.append((float(self.x)))
+#             self.accdata_y[0:ct.const.ACC_COUNT-1]= self.accdata_y[1:ct.const.ACC_COUNT]
+#             self.accdata_y.append(float(self.y))
+            self.accdata_x.append((float(self.x)))
+            self.accdata_y.append(float(self.y))
+            
+            print("X:",self.accdata_x)
+            print("Y:",self.accdata_y)
+            
             acc=np.array(self.accdata)
-            print(acc)
+#             print(acc)
             self.countstuck=np.count_nonzero( acc < ct.const.RUNNiNG_STUCK_ACC_THRE)
             print(self.countstuck)
             
@@ -853,19 +869,31 @@ class Cansat(object):
                     time.sleep(1)
 
                 else:#トルネードで脱出
-                    self.rightmotor.go(100)
-                    self.leftmotor.back(100)
+                    self.rightmotor.back(100)
+                    self.leftmotor.go(100)
                     time.sleep(0.5)
+                    if len(self.accdata_x) < ct.const.ODOMETRI_BACK:
+                        self.x=self.accdata_x[0]
+                        self.y=self.accdata_y[0] 
+                               
+                    else:
+                        self.x=self.accdata_x[-ct.const.ODOMETRI_BACK]
+                        self.y=self.accdata_y[-ct.const.ODOMETRI_BACK]
+                        
                     self.rightmotor.go(self.v_ref)
                     self.leftmotor.go(self.v_ref)
+                    print(f"X:{self.x},Y:{self.y}")
+                    self.odometri()
+                 
                     time.sleep(1)
                     self.accdata=list()
+                    self.accdata_x=list()
+                    self.accdata_y=list()
         
-
     
     def running(self):
 #         print("Acceleration:"+str(self.Ax**2 + self.Ay**2 + self.Az**2))
-#         print("Acceleration:"+str(self.Az**2 ))
+        print("Acceleration:"+str(self.Az**2 ))
         if self.runningTime == 0:#時刻を取得してLEDをステートに合わせて光らせる
             self.runningTime = time.time()
             self.RED_LED.led_on()
@@ -882,6 +910,7 @@ class Cansat(object):
                 self.rightmotor.go(70)
                 self.leftmotor.go(80)
                 self.odometri()
+                print("case is "+str(self.case))
                 
             else:
                 if math.sqrt((self.x - self.n_LogData[self.measuringcount-1][1])**2 + (self.y - self.n_LogData[self.measuringcount-1][2])**2) > ct.const.MEASURMENT_INTERVAL:#前回の測量地点から閾値以上動いたらmeasurring stateへ

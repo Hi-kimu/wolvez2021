@@ -1,0 +1,5 @@
+GPS_sta 0,0
+GPS_sta 0,0
+GPS_sta 0,0
+GPS_sta 0,0
+GPS_sta 0,0

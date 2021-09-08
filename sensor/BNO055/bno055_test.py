@@ -35,7 +35,7 @@ try:
         euler="ex="+str(bno055.ex)+","\
               +"ey="+str(bno055.ey)+","\
               +"ez="+str(bno055.ez)
-        print(grav) 
+        print(accel) 
               
         time.sleep(1)
 except KeyboardInterrupt:

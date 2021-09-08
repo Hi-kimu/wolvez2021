@@ -48,8 +48,11 @@ try:
     error=math.sin(math.radians(0)) - math.sin(q)
     ke=k*error
 
-    MotorL.go(v_ref+ke)
-    MotorR.go(v_ref-ke)
+#     MotorL.go(v_ref-2*ke)
+#     MotorR.go(v_ref+2*ke)
+    MotorL.go(70)
+    MotorR.go(70)
+
 #     MotorR.back(60)
 #     MotorL.go(60)
 #     bno055.bnoread()
@@ -58,8 +61,11 @@ try:
         error=math.sin(math.radians(0)) - math.sin(q)
         ke=k*error
 
-        MotorL.go(v_ref+ke)
-        MotorR.go(v_ref-ke)
+#         MotorL.go(v_ref+ke)
+#         MotorR.go(v_ref-ke)
+        MotorL.go(70)
+        MotorR.go(70)
+
 #         t1=time.time()
         t1 = time.time()
         cansat_speed,cansat_rad_speed=Encoder.est_v_w(ct.const.RIGHT_MOTOR_ENCODER_A_PIN,ct.const.LEFT_MOTOR_ENCODER_A_PIN)
