@@ -44,5 +44,5 @@ const.STARTING_TIME_THRE = 60
 const.MEASURING_SWITCH_COUNT_THRE = 20#1地点での測位回数
 const.MEASURING_MAX_MEASURING_COUNT_THRE = 6 #=最大測位点-1
 const.RUNNiNG_STUCK_ACC_THRE = 0.005
-const.ACC_COUNT = 10 #スタック判定する加速度の個数
+const.ACC_COUNT = 7 #スタック判定する加速度の個数
 const.ODOMETRI_BACK=5
