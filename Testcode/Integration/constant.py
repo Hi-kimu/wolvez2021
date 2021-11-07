@@ -1,4 +1,4 @@
-#Last Update 2021/08/10
+#Last Update 2021/11/07
 #Hikaru Kimura
 
 import const
