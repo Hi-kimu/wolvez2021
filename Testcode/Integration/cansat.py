@@ -3,7 +3,7 @@
 Keio Wolve'Z cansat2021
 mission function
 Author Hikaru Kimura
-last update:2021/8/04
+last update:2021/11/07
 
 """
 
@@ -823,9 +823,10 @@ class Cansat(object):
         
         if len(self.accdata)< ct.const.ACC_COUNT:
             self.accdata.append(float(self.Az**2))
+            print(self.accdata)
             self.accdata_x.append(float(self.x))
             self.accdata_y.append(float(self.y))
-            print(self.accdata)
+            
             print("X:",self.accdata_x)
             print("Y:",self.accdata_y)
             self.odometri()
@@ -836,24 +837,27 @@ class Cansat(object):
 #             print(f"5:{self.accdata[4]}")
 #             print(f"accmean:{np.mean(self.accdata)}")
 #             print(f"accmedian:{np.median(self.accdata)}")
+
+"""
+#11/07 削除
             self.accdata[0:ct.const.ACC_COUNT-1]= self.accdata[1:ct.const.ACC_COUNT]
             self.accdata.append(float(self.Az**2))
-#             self.accdata_x[0:ct.const.ACC_COUNT-1]= self.accdata_x[1:ct.const.ACC_COUNT]
-#             self.accdata_x.append((float(self.x)))
-#             self.accdata_y[0:ct.const.ACC_COUNT-1]= self.accdata_y[1:ct.const.ACC_COUNT]
-#             self.accdata_y.append(float(self.y))
+"""            
+            self.accdata[1:ct.const.ACC_COUNT]= self.accdata[0:ct.const.ACC_COUNT-1]
+            self.accdata[0]=self.Az**2
+            self.accdata_x[0:ct.const.ACC_COUNT-1]= self.accdata_x[1:ct.const.ACC_COUNT]
+            self.accdata_x.append((float(self.x)))
+            self.accdata_y[0:ct.const.ACC_COUNT-1]= self.accdata_y[1:ct.const.ACC_COUNT]
+            self.accdata_y.append(float(self.y))
             self.accdata_x.append((float(self.x)))
             self.accdata_y.append(float(self.y))
-            
-            print("X:",self.accdata_x)
-            print("Y:",self.accdata_y)
             
             acc=np.array(self.accdata)
 #             print(acc)
             self.countstuck=np.count_nonzero( acc < ct.const.RUNNiNG_STUCK_ACC_THRE)
             print(self.countstuck)
             
-            if self.countstuck > 6:
+            if self.countstuck > 4:
                 print("stuck!!!!!")
                 back = False #バックでスタックから脱出したい場合True,トルネードならFalse
 
@@ -870,9 +874,9 @@ class Cansat(object):
                     time.sleep(1)
 
                 else:#トルネードで脱出
-                    self.rightmotor.back(100)
-                    self.leftmotor.go(0)
-                    time.sleep(0.8)
+                    self.rightmotor.go(100)
+                    self.leftmotor.back(100)
+                    time.sleep(0.5)
                     if len(self.accdata_x) < ct.const.ODOMETRI_BACK:
                         self.x=self.accdata_x[0]
                         self.y=self.accdata_y[0] 
@@ -883,7 +887,6 @@ class Cansat(object):
                         
                     self.rightmotor.go(self.v_ref)
                     self.leftmotor.go(self.v_ref)
-                    print(f"X:{self.x},Y:{self.y}")
                     self.odometri()
                  
                     time.sleep(1)
