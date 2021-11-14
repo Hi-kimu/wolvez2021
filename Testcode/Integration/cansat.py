@@ -938,7 +938,7 @@ class Cansat(object):
         else:
             if self.positioning_count >= len(self.n_LogData):
                 self.n_pdf_sum=sum(self.n_pdf)
-                Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum)
+                Estimation_Result_x, Estimation_Result_y=self.graph(self.n_pdf_sum,'a')
                 #絶対座標
                 print("絶対座標(x,y):" +"(" + str(Estimation_Result_x)+","+str(Estimation_Result_y)+")")
                 
@@ -996,9 +996,9 @@ class Cansat(object):
                 self.raw_n_pdf_sum=sum(self.raw_n_pdf)
                 self.mean_n_pdf_sum=sum(self.mean_n_pdf)
                 self.std_n_pdf_sum=sum(self.std_n_pdf)
-                self.result_cal(self.raw_n_pdf_sum)
-                self.result_cal(self.mean_n_pdf_sum)
-                self.result_cal(self.std_n_pdf_sum)
+                self.result_cal(self.raw_n_pdf_sum,'raw')
+                self.result_cal(self.mean_n_pdf_sum,'mean')
+                self.result_cal(self.std_n_pdf_sum,'std')
                 
                 lastdata = "----------------------------"  + '\n'\
                            + "#CanSat定義式からの推定結果:"+str(self.n_dis_LogCansatRSSI)+ '\n' \
@@ -1036,8 +1036,8 @@ class Cansat(object):
                 self.std_n_pdf.append(std_result)
                 self.positioning_count +=1
     
-    def result_cal(self,n_pdf_sum):
-                Estimation_Result_x, Estimation_Result_y=self.graph(n_pdf_sum)
+    def result_cal(self,n_pdf_sum,Zvar):
+                Estimation_Result_x, Estimation_Result_y=self.graph(n_pdf_sum,Zvar)
                 #絶対座標
                 print("絶対座標(x,y):" +"(" + str(Estimation_Result_x)+","+str(Estimation_Result_y)+")")
                 World_Estimation_Error = math.sqrt((Estimation_Result_x - 7 )**2 + (Estimation_Result_y - 6 )**2) #探索機が(x,y)の場合
@@ -1083,7 +1083,7 @@ class Cansat(object):
         ww=3
         return 1*np.exp(-1*ww*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*r**2))*((w*self.X-xc)**2+(w*self.Y-yc)**2)/(2*math.pi*r**2)
     
-    def graph(self,Z):
+    def graph(self,Z,Zver):
         x = np.arange(-30, 31, 1)
         y = np.arange(-30, 31, 1)
         Zc=np.unravel_index(np.argmax(Z), Z.shape)
@@ -1104,7 +1104,7 @@ class Cansat(object):
         #plt.show()
         name = str(self.filename_hm)
         my_path = os.path.abspath('/home/pi/Desktop/wolvez2021/Testcode/Integration/%s' % (self.filename))
-        my_file = name + str(Z) + ".pdf"
+        my_file = name + str(Zver) + ".pdf"
         fig.savefig(os.path.join(my_path, my_file))
         
         return x_est, y_est
