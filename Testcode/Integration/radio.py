@@ -124,13 +124,13 @@ class radio(object):
             
     def estimate_distance_Cansat_2(self,meanCansatRSSI):
         #近似式より推定
-       return 0.2563*math.exp(-0.05*meanCansatRSSI)
+        return 0.10672*math.exp(-0.059*meanCansatRSSI)
      
     
     def estimate_distance_Lost_2(self,meanLostRSSI):
         #近似式より推定
      
-        return 0.2152*math.exp(-0.053*meanLostRSSI)
+        return 0.1297*math.exp(-0.056*meanLostRSSI)
 
 
 
