@@ -176,13 +176,24 @@ class estimation():
         self.mot_speed=0
         self.mot_speed2=0
         self.pulse=898
-        self.iteration=50
+        self.iteration=30
         self.kaiten1=0
         self.kaiten2=0
         self.low = 0.6
         self.high = 1.4
-    
+        self.pm_flag = 0
+        
+#         print("A:",GPIO.input(self.pin_a))
+#         print("B:",GPIO.input(self.pin_b))
+#         print("C:",GPIO.input(self.pin_c))
+#         print("D:",GPIO.input(self.pin_d))
+
+        self.pm_time = time.time()   # time_break
         while self.mot_speed==0:
+            self.pm_time_now = time.time()
+            if self.pm_time_now - self.pm_time > 0.1:
+                self.pm_flag = 1
+                break
             self.current_a=GPIO.input(self.pin_a)
             self.current_b=GPIO.input(self.pin_b)
 #             print(self.current_a)
@@ -229,8 +240,12 @@ class estimation():
             
             self.prev_data=self.encoded
             self.prev_angle = self.angle
-#         
+#
+        self.pm_time = time.time()
         while self.mot_speed2==0:
+            if self.pm_time_now - self.pm_time > 0.1:
+                self.pm_flag = 1
+                break
             self.current_c=GPIO.input(self.pin_c)
             self.current_d=GPIO.input(self.pin_d)
             
@@ -275,6 +290,10 @@ class estimation():
             
             self.prev_data2=self.encoded2
             self.prev_angle2 = self.angle2
+        
+        if self.pm_flag == 1:
+            self.mot_speed = 0
+            self.mot_speed2 = 0
         
         self.cansat_speed = 2*3.14*(0.0665/2)*self.mot_speed + 2*3.14*(0.0665/2)*self.mot_speed2
         self.cansat_rad_speed = (0.0665/0.196)*self.mot_speed - (0.0665/0.196)*self.mot_speed2
